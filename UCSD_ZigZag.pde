@@ -21,7 +21,6 @@ void setup() {
     xbee = new XBee();
     // replace with your COM port
     xbee.open("/dev/tty.usbmodem14231", 9600);
-
     xbee.addPacketListener(new PacketListener() {
       public void processResponse(XBeeResponse response) {
         queue.offer(response);
@@ -46,21 +45,25 @@ void draw() {
 }
 
 void readPackets() throws Exception {
-
   while ((response = queue.poll()) != null) {
+    println("THIS IS A TEST " + response.getClass());
     // we got something!
     try {
-      RxResponseIoSample ioSample = (RxResponseIoSample) response;
-
-      println("We received a sample from " + ioSample.getSourceAddress());
-
-      if (ioSample.containsAnalog()) {
-        println("10-bit temp reading (pin 19) is " +
-          ioSample.getSamples()[0].getAnalog1());
+      if (response.getApiId() == ApiId.ZNET_RX_RESPONSE) {
+        ZNetRxResponse znetResponse = (ZNetRxResponse) response;
+        AtCommand at = new AtCommand("DB");
+        xbee.sendAsynchronous(at);
+      } else if (response.getApiId() == ApiId.AT_RESPONSE) {
+          // RSSI is only of last hop
+          println("RSSI of last response is " + -((AtCommandResponse)response).getValue()[0]);
+      } else {
+        // we didn't get an AT response
+        println("expected RSSI, but received " + response.toString());
       }
-    } 
+    }
     catch (ClassCastException e) {
       // not an IO Sample
+      println("Class cast exception");
     }
   }
 }

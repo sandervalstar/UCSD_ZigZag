@@ -20,8 +20,15 @@ int maxSig = 92;
 int currentSig = 0;
 PImage imgSignal[];
   
+// application configuration
+JSONObject jsonConfig;
+  
 void setup()
 {
+  // load configuration
+  jsonConfig =  loadJSONObject("config.json");
+  String serialPortName = jsonConfig.getString("SerialPort");
+  
   // load images
   imgSignal = new PImage[4];
   for (int i = 0; i < 4; ++i)
@@ -36,7 +43,7 @@ void setup()
 
     xbee = new XBee();
     // replace with your COM port
-    xbee.open("COM10", 9600);
+    xbee.open(serialPortName, 9600);
     xbee.addPacketListener(new PacketListener() {
       public void processResponse(XBeeResponse response) {
         queue.offer(response);
@@ -59,15 +66,26 @@ void draw() {
     e.printStackTrace();
   }
   
+  // updates signal strenght range
   if (currentSig < minSig)
     minSig = currentSig;
   if (currentSig > maxSig)
     minSig = currentSig;
+    
+   // background
    background(map(currentSig, minSig, maxSig, 255, 0), 0 , 0);//map(currentSig, minSig, maxSig, 255, 0));
+   
+   // print wifi signal image
+   image(imgSignal[3 - currentSig / ((maxSig-minSig)/4)], 0, 0, width, height);
+   
+   // print signal strength
+   stroke(255,255,255);
+   textAlign(CENTER);
+   text(currentSig, width/2, 3*height/4); 
 }
 
 void readPackets() throws Exception {
-  while ((response = queue.poll()) != null)
+  if ((response = queue.poll()) != null)
   {
   //  println("THIS IS A TEST " + response.getClass());
     // we got something!

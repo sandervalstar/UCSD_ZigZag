@@ -12,6 +12,10 @@ XBee xbee;
 Queue<XBeeResponse> queue = new ConcurrentLinkedQueue<XBeeResponse>();
 boolean message;
 XBeeResponse response;
+int rssi = 100;
+int min = 26;
+int max = 92;
+
   
 void setup() {
   try { 
@@ -38,6 +42,21 @@ void setup() {
 void draw() {
   try {
     readPackets();
+    if(rssi < min) {
+      min = rssi;
+    }
+    if(rssi > max) {
+      max = rssi;
+    }
+    //0 = blue
+    //100 = red;
+    float red = map(rssi, min, max, 255, 0);
+    float blue = map(rssi, min, max, 0, 255);
+    
+    background(red, 0, blue);
+    
+    textAlign(CENTER);
+    text("RSSI: -"+rssi, width/2,100);
   } 
   catch (Exception e) {
     e.printStackTrace();
@@ -45,7 +64,7 @@ void draw() {
 }
 
 void readPackets() throws Exception {
-  while ((response = queue.poll()) != null) {
+  if ((response = queue.poll()) != null) {
     println("THIS IS A TEST " + response.getClass());
     // we got something!
     try {
@@ -56,6 +75,7 @@ void readPackets() throws Exception {
       } else if (response.getApiId() == ApiId.AT_RESPONSE) {
           // RSSI is only of last hop
           println("RSSI of last response is " + -((AtCommandResponse)response).getValue()[0]);
+          rssi = ((AtCommandResponse)response).getValue()[0];
       } else {
         // we didn't get an AT response
         println("expected RSSI, but received " + response.toString());

@@ -75,13 +75,19 @@ void draw() {
    // background
    background(map(currentSig, minSig, maxSig, 255, 0), 0 , 0);//map(currentSig, minSig, maxSig, 255, 0));
    
-   // print wifi signal image
-   image(imgSignal[3 - currentSig / ((maxSig-minSig)/4)], 0, 0, width, height);
+   // print wifi signal image   
+   fill(0);
+   stroke(0,0,0);
+   arc(width/2, 3*height/4, height, height, PI + QUARTER_PI, PI + 3*QUARTER_PI);
+   fill(255);
+   stroke(255,255,255);
+   float range = map(currentSig, minSig, maxSig, height, 0);
+   arc(width/2, 3*height/4, range, range, PI + QUARTER_PI, PI + 3*QUARTER_PI);
    
    // print signal strength
    stroke(255,255,255);
    textAlign(CENTER);
-   text(currentSig, width/2, 3*height/4); 
+   text(currentSig, width/2, 3*height/4 + 20); 
 }
 
 void readPackets() throws Exception {

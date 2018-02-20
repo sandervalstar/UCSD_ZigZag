@@ -19,6 +19,9 @@ int minSig = 26;
 int maxSig = 92;
 int currentSig = 0;
 PImage imgSignal[];
+
+Queue<Long> timestampsQueue = new ConcurrentLinkedQueue<Long>();
+long roundTripDistance = 0;
   
 // application configuration
 JSONObject jsonConfig;
@@ -87,7 +90,8 @@ void draw() {
    // print signal strength
    stroke(255,255,255);
    textAlign(CENTER);
-   text(currentSig, width/2, 3*height/4 + 20); 
+   text(currentSig, width/2, 3*height/4 + 20);
+   text(roundTripDistance, width/2, 3*height/4 + 50);
 }
 
 void readPackets() throws Exception {
@@ -101,11 +105,16 @@ void readPackets() throws Exception {
         ZNetRxResponse znetResponse = (ZNetRxResponse) response;
         AtCommand at = new AtCommand("DB");
         xbee.sendAsynchronous(at);
+        timestampsQueue.offer(System.nanoTime()/1000L);
       }
       else if (response.getApiId() == ApiId.AT_RESPONSE)
       {
           // RSSI is only of last hop
           currentSig = ((AtCommandResponse)response).getValue()[0];
+          Long ts = timestampsQueue.poll();
+          if(ts != null) {
+            roundTripDistance = System.nanoTime()/1000L - ts;
+          }
       }
       else
       {

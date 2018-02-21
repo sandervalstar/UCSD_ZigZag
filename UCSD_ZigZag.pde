@@ -18,8 +18,7 @@ XBeeResponse response;
 int minSig = 26;
 int maxSig = 92;
 int currentSig = 0;
-PImage imgSignal[];
-  
+
 // application configuration
 JSONObject jsonConfig;
   
@@ -28,11 +27,6 @@ void setup()
   // load configuration
   jsonConfig =  loadJSONObject("config.json");
   String serialPortName = jsonConfig.getString("SerialPort");
-  
-  // load images
-  imgSignal = new PImage[4];
-  for (int i = 0; i < 4; ++i)
-    imgSignal[i] = loadImage("wifi_signal_" + i + ".png");
   
   // make it full screen when using a cellphone
   size(640, 480);

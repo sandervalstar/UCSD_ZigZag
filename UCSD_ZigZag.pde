@@ -8,6 +8,11 @@ import com.rapplogic.xbee.api.XBee;
 import com.rapplogic.xbee.api.XBeeResponse;
 import com.rapplogic.xbee.api.wpan.RxResponseIoSample;
 
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
+
 // XBee related
 XBee xbee;
 Queue<XBeeResponse> queue = new ConcurrentLinkedQueue<XBeeResponse>();
@@ -19,9 +24,35 @@ int minSig = 26;
 int maxSig = 92;
 int currentSig = 0;
 
+PImage imgSignal[];
+
+Queue<Long> timestampsQueue = new ConcurrentLinkedQueue<Long>();
+long roundTripDistance = 0;
+
 // application configuration
 JSONObject jsonConfig;
-  
+
+/* 
+  * Example Message types for reference
+
+  * Tx Request with "testing" payload
+    0x10, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFE, 0x00, 0x00, 0x74, 
+    0x65, 0x73, 0x74, 0x69, 0x6E, 0x67
+ 
+  * Remote ATAS
+    0x17, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFE, 0x02, 0x41, 0x53
+
+  * Remote ATDB
+    0x17, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFE, 0x02, 0x44, 0x42
+    
+*/
+
+/*
+  Remote at request for RSSI. This message is broadcast to all nodes in the same PanID
+  Packet frame generated from XCTU
+*/
+XBeePacket remoteAtRequest = new XBeePacket(new int[]{0x17, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFE, 0x02, 0x44, 0x42});
+
 void setup()
 {
   // load configuration
@@ -40,12 +71,31 @@ void setup()
     xbee.open(serialPortName, 9600);
     xbee.addPacketListener(new PacketListener() {
       public void processResponse(XBeeResponse response) {
+        println("process response " + response.getApiId());
         queue.offer(response);
+      }});
+
+  // This sleep is a hack to wait for the packet listener to register
+  Thread.sleep(5000);
+  println("going to send first remote at request");
+  xbee.sendPacket(remoteAtRequest);
+  println("sent");
+  
+  // schedule executor service to poll responses and send again every second
+  // TODO maybe a better way to do this
+  ScheduledExecutorService scheduledExecutorService =
+        Executors.newScheduledThreadPool(1);
+  Runnable run = new Runnable() {
+    public void run() {
+      try {
+        readPackets();
+      } catch (Exception e) {
+        e.printStackTrace();
       }
     }
-    );
-  } 
-  catch (Exception e) {
+  };
+  scheduledExecutorService.scheduleAtFixedRate(run, 0, 1,  TimeUnit.SECONDS);
+  } catch (Exception e) {
     System.out.println("XBee failed to initialize");
     e.printStackTrace();
     System.exit(1);
@@ -53,12 +103,6 @@ void setup()
 }
 
 void draw() {
-  try {
-    readPackets();
-  } 
-  catch (Exception e) {
-    e.printStackTrace();
-  }
   
   // updates signal strenght range
   if (currentSig < minSig)
@@ -81,35 +125,29 @@ void draw() {
    // print signal strength
    stroke(255,255,255);
    textAlign(CENTER);
-   text(currentSig, width/2, 3*height/4 + 20); 
+   text(currentSig, width/2, 3*height/4 + 20);
+   text(roundTripDistance, width/2, 3*height/4 + 50);
 }
 
+/**
+ This method is called to poll for any current responses and send another AT request for RSSI.
+ Another request is sent only when the previous reseponse was processed. 
+ TODO: This may be slow and non responsive
+ TODO: This doesn't filter if there are multiple devices
+*/
 void readPackets() throws Exception {
-  if ((response = queue.poll()) != null)
-  {
-  //  println("THIS IS A TEST " + response.getClass());
-    // we got something!
-    try {
-      if (response.getApiId() == ApiId.ZNET_RX_RESPONSE)
-      {
-        ZNetRxResponse znetResponse = (ZNetRxResponse) response;
-        AtCommand at = new AtCommand("DB");
-        xbee.sendAsynchronous(at);
-      }
-      else if (response.getApiId() == ApiId.AT_RESPONSE)
-      {
-          // RSSI is only of last hop
-          currentSig = ((AtCommandResponse)response).getValue()[0];
-      }
-      else
-      {
-        // we didn't get an AT response
-        println("expected RSSI, but received " + response.toString());
+  if ((response = queue.poll()) != null) {
+    println("THIS IS A TEST " + response.getApiId());
+    if (response.getApiId() == ApiId.REMOTE_AT_RESPONSE) {
+      RemoteAtResponse atResponse = (RemoteAtResponse) response;
+      // print remote address
+      println("remote at response received, remote address: " + atResponse.getRemoteAddress16());
+      if (atResponse.getValue().length > 0) {
+        println("RSSI: " + atResponse.getValue()[0]);
+        currentSig = atResponse.getValue()[0];
       }
     }
-    catch (ClassCastException e) {
-      // not an IO Sample
-      println("Class cast exception");
-    }
+    xbee.sendPacket(remoteAtRequest);
+    println("sent again");
   }
 }

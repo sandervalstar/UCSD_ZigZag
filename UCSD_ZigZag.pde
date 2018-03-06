@@ -1,5 +1,6 @@
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.LinkedList;
 
 import org.apache.log4j.PropertyConfigurator;
 
@@ -21,9 +22,39 @@ int currentSig = 0;
 
 // application configuration
 JSONObject jsonConfig;
+
+Queue<Integer> lastPackets = new LinkedList<Integer>();
+
+void updateQueue(int signalStrength)
+{
+  lastPackets.add(signalStrength);
+  
+  while (lastPackets.size() > 100)
+    lastPackets.remove();
+}
+
+void drawSignalStrength()
+{
+  int x1 = 0, increment = width / 100;
+  x1 -= increment; // hack to use iterator below
+  int lastStrength = lastPackets.peek();
+  for (Integer strength : lastPackets)
+  {
+    line(x1, 100 + lastStrength, x1 + increment, 100 + strength);
+    x1 += increment;
+    lastStrength = strength;
+  }
+  
+}
   
 void setup()
 {
+  // create an empty list
+  for (int i = 0; i < 100; ++i)
+  {
+    lastPackets.add(0);
+  }
+  
   // load configuration
   jsonConfig =  loadJSONObject("config.json");
   String serialPortName = jsonConfig.getString("SerialPort");
@@ -82,10 +113,13 @@ void draw() {
    stroke(255,255,255);
    textAlign(CENTER);
    text(currentSig, width/2, 3*height/4 + 20); 
+   
+   // print signal chart
+   drawSignalStrength();
 }
 
 void readPackets() throws Exception {
-  if ((response = queue.poll()) != null)
+  while ((response = queue.poll()) != null)
   {
   //  println("THIS IS A TEST " + response.getClass());
     // we got something!
@@ -100,6 +134,7 @@ void readPackets() throws Exception {
       {
           // RSSI is only of last hop
           currentSig = ((AtCommandResponse)response).getValue()[0];
+          updateQueue(currentSig);
       }
       else
       {

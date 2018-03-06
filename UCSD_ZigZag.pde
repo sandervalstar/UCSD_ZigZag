@@ -1,6 +1,5 @@
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.LinkedList;
 
 import org.apache.log4j.PropertyConfigurator;
 
@@ -24,36 +23,13 @@ XBeeResponse response;
 int minSig = 26;
 int maxSig = 92;
 int currentSig = 0;
-
-Queue<Long> timestampsQueue = new ConcurrentLinkedQueue<Long>();
 long roundTripDistance = 0;
 
 // application configuration
 JSONObject jsonConfig;
 
-Queue<Integer> lastPackets = new LinkedList<Integer>();
-
-void updateQueue(int signalStrength)
-{
-  lastPackets.add(signalStrength);
-  
-  while (lastPackets.size() > 100)
-    lastPackets.remove();
-}
-
-void drawSignalStrength()
-{
-  int x1 = 0, increment = width / 100;
-  x1 -= increment; // hack to use iterator below
-  int lastStrength = lastPackets.peek();
-  for (Integer strength : lastPackets)
-  {
-    line(x1, 100 + lastStrength, x1 + increment, 100 + strength);
-    x1 += increment;
-    lastStrength = strength;
-  }
-  
-}
+// line plots
+LinePlot rssiPlot;
   
 /* 
   * Example Message types for reference
@@ -78,18 +54,15 @@ XBeePacket remoteAtRequest = new XBeePacket(new int[]{0x17, 0x01, 0x00, 0x00, 0x
 
 void setup()
 {
-  // create an empty list
-  for (int i = 0; i < 100; ++i)
-  {
-    lastPackets.add(0);
-  }
-  
   // load configuration
   jsonConfig =  loadJSONObject("config.json");
   String serialPortName = jsonConfig.getString("SerialPort");
   
   // make it full screen when using a cellphone
   size(640, 480);
+  
+  // create line plots
+  rssiPlot = new LinePlot(color(255,255,255), 2, 100, 640);
    
   try { 
     //optional.  set up logging
@@ -157,8 +130,9 @@ void draw() {
    
    text(currentSig, width/2, 3*height/4 + 20); 
    text(roundTripDistance, width/2, 3*height/4 + 50);
+   
    // print signal chart
-   drawSignalStrength();
+   rssiPlot.draw(0, 100);
 }
 
 /**
@@ -182,7 +156,7 @@ void readPackets() throws Exception {
       {
         println("RSSI: " + atResponse.getValue()[0]);
         currentSig = atResponse.getValue()[0];
-        updateQueue(currentSig);
+        rssiPlot.add(currentSig);
       }
     }
     xbee.sendPacket(remoteAtRequest);

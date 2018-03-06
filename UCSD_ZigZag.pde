@@ -13,6 +13,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import java.sql.Timestamp; // Measurement code
+
 // XBee related
 XBee xbee;
 Queue<XBeeResponse> queue = new ConcurrentLinkedQueue<XBeeResponse>();
@@ -54,8 +56,12 @@ KalmanFilter kalmanFilter = new KalmanFilter(0.008, 1, 1, 0, 1);
 */
 XBeePacket remoteAtRequest = new XBeePacket(new int[]{0x17, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFE, 0x02, 0x44, 0x42});
 
+//PrintWriter writer; // Measurement code
+
 void setup()
-{
+{           
+  //try{writer = new PrintWriter(dataPath("") + "farcmaway.csv","UTF-8");} catch (Exception e){} // Measurement code
+
   // load configuration
   jsonConfig =  loadJSONObject("config.json");
   String serialPortName = jsonConfig.getString("SerialPort");
@@ -145,6 +151,10 @@ void draw() {
  TODO: This may be slow and non responsive
  TODO: This doesn't filter if there are multiple devices
 */
+
+boolean savingToFile = true;
+int numbersSaved = 0;
+
 void readPackets() throws Exception {
   if ((response = queue.poll()) != null)
   {
@@ -161,11 +171,27 @@ void readPackets() throws Exception {
         //println("RSSI: " + atResponse.getValue()[0]);
         currentSig = atResponse.getValue()[0];
         rssiPlot.add(currentSig);
-        currentSig = kalmanFilter.filter(currentSig, 0);
-        filteredPlot.add(currentSig);
+        float smoothedSig = kalmanFilter.filter(currentSig, 0);
+        filteredPlot.add(smoothedSig);
+        
+        //if (savingToFile)                                                             // Measurement code
+        //{                                                                             // Measurement code
+        //  Timestamp timestamp = new Timestamp(System.currentTimeMillis());            // Measurement code
+        //  writer.println(timestamp.getTime() + "," + currentSig + "," + smoothedSig); // Measurement code
+        //  println("\n\nNumbers saved: " + ++numbersSaved);                            // Measurement code
+        //} else {                                                                      // Measurement code
+        //  writer.close();                                                             // Measurement code
+        //}                                                                             // Measurement code
+        
+        
+        currentSig = smoothedSig;
       }
     }
     xbee.sendPacket(remoteAtRequest);
     //println("sent again");
   }
+}
+
+void mouseClicked() {
+  //savingToFile = false;  // Measurement code
 }

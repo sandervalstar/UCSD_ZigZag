@@ -25,8 +25,6 @@ int minSig = 26;
 int maxSig = 92;
 int currentSig = 0;
 
-PImage imgSignal[];
-
 Queue<Long> timestampsQueue = new ConcurrentLinkedQueue<Long>();
 long roundTripDistance = 0;
 
@@ -177,8 +175,6 @@ void readPackets() throws Exception {
     if (response.getApiId() == ApiId.AT_RESPONSE)
     {
       // RSSI is only of last hop
-      //currentSig = ((AtCommandResponse)response).getValue()[0];
-      //updateQueue(currentSig);
       RemoteAtResponse atResponse = (RemoteAtResponse) response;
       // print remote address
       println("remote at response received, remote address: " + atResponse.getRemoteAddress16());
@@ -186,6 +182,7 @@ void readPackets() throws Exception {
       {
         println("RSSI: " + atResponse.getValue()[0]);
         currentSig = atResponse.getValue()[0];
+        updateQueue(currentSig);
       }
     }
     xbee.sendPacket(remoteAtRequest);

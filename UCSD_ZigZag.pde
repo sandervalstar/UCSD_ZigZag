@@ -20,9 +20,9 @@ boolean message;
 XBeeResponse response;
 
 // signal strength related
-int minSig = 26;
-int maxSig = 92;
-int currentSig = 0;
+float minSig = 26.0f;
+float maxSig = 92.0f;
+float currentSig = 0.0f;
 long roundTripDistance = 0;
 
 // application configuration
@@ -155,16 +155,17 @@ void readPackets() throws Exception {
       // RSSI is only of last hop
       RemoteAtResponse atResponse = (RemoteAtResponse) response;
       // print remote address
-      println("remote at response received, remote address: " + atResponse.getRemoteAddress16());
+      //println("remote at response received, remote address: " + atResponse.getRemoteAddress16());
       if (atResponse.getValue().length > 0)
       {
-        println("RSSI: " + atResponse.getValue()[0]);
+        //println("RSSI: " + atResponse.getValue()[0]);
         currentSig = atResponse.getValue()[0];
         rssiPlot.add(currentSig);
-        filteredPlot.add(kalmanFilter.filter(currentSig, 0));
+        currentSig = kalmanFilter.filter(currentSig, 0);
+        filteredPlot.add(currentSig);
       }
     }
     xbee.sendPacket(remoteAtRequest);
-    println("sent again");
+    //println("sent again");
   }
 }

@@ -29,7 +29,9 @@ long roundTripDistance = 0;
 JSONObject jsonConfig;
 
 // line plots
-LinePlot rssiPlot;
+LinePlot rssiPlot, filteredPlot;
+                                           //R    , Q, A, B, C
+KalmanFilter kalmanFilter = new KalmanFilter(0.008, 1, 1, 0, 1);
   
 /* 
   * Example Message types for reference
@@ -63,6 +65,7 @@ void setup()
   
   // create line plots
   rssiPlot = new LinePlot(color(255,255,255), 2, 100, 640);
+  filteredPlot = new LinePlot(color(128,128,255), 3, 100, 640);
    
   try { 
     //optional.  set up logging
@@ -132,6 +135,7 @@ void draw() {
    text(roundTripDistance, width/2, 3*height/4 + 50);
    
    // print signal chart
+   filteredPlot.draw(0, 100);
    rssiPlot.draw(0, 100);
 }
 
@@ -142,11 +146,11 @@ void draw() {
  TODO: This doesn't filter if there are multiple devices
 */
 void readPackets() throws Exception {
-  while ((response = queue.poll()) != null)
+  if ((response = queue.poll()) != null)
   {
     //  println("THIS IS A TEST " + response.getClass());
     // we got something!
-    if (response.getApiId() == ApiId.AT_RESPONSE)
+    if (response.getApiId() == ApiId.REMOTE_AT_RESPONSE)
     {
       // RSSI is only of last hop
       RemoteAtResponse atResponse = (RemoteAtResponse) response;
@@ -157,6 +161,7 @@ void readPackets() throws Exception {
         println("RSSI: " + atResponse.getValue()[0]);
         currentSig = atResponse.getValue()[0];
         rssiPlot.add(currentSig);
+        filteredPlot.add(kalmanFilter.filter(currentSig, 0));
       }
     }
     xbee.sendPacket(remoteAtRequest);

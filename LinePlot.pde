@@ -1,5 +1,5 @@
 import java.util.Queue;
-import java.util.LinkedList;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.Iterator;
 
 /***
@@ -15,7 +15,7 @@ class LinePlot
   
   public LinePlot(color lineColor, float lineThickness, int elements, float chartWidth)
   {
-    numberQ = new LinkedList<Float>();
+    numberQ = new ConcurrentLinkedQueue<Float>();
     
     // initializes with zeros
     for (int i = 0; i < elements; ++i)

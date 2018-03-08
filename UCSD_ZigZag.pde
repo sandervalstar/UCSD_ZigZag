@@ -1,6 +1,5 @@
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.LinkedList;
 
 import org.apache.log4j.PropertyConfigurator;
 
@@ -14,6 +13,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import java.sql.Timestamp; // Measurement code
+
 // XBee related
 XBee xbee;
 Queue<XBeeResponse> queue = new ConcurrentLinkedQueue<XBeeResponse>();
@@ -21,41 +22,18 @@ boolean message;
 XBeeResponse response;
 
 // signal strength related
-int minSig = 26;
-int maxSig = 92;
-int currentSig = 0;
-
-PImage imgSignal[];
-
-Queue<Long> timestampsQueue = new ConcurrentLinkedQueue<Long>();
+float minSig = 26.0f;
+float maxSig = 92.0f;
+float currentSig = 0.0f;
 long roundTripDistance = 0;
 
 // application configuration
 JSONObject jsonConfig;
 
-Queue<Integer> lastPackets = new LinkedList<Integer>();
-
-void updateQueue(int signalStrength)
-{
-  lastPackets.add(signalStrength);
-  
-  while (lastPackets.size() > 100)
-    lastPackets.remove();
-}
-
-void drawSignalStrength()
-{
-  int x1 = 0, increment = width / 100;
-  x1 -= increment; // hack to use iterator below
-  int lastStrength = lastPackets.peek();
-  for (Integer strength : lastPackets)
-  {
-    line(x1, 100 + lastStrength, x1 + increment, 100 + strength);
-    x1 += increment;
-    lastStrength = strength;
-  }
-  
-}
+// line plots
+LinePlot rssiPlot, filteredPlot;
+                                           //R    , Q, A, B, C
+KalmanFilter kalmanFilter = new KalmanFilter(0.008, 1, 1, 0, 1);
   
 /* 
   * Example Message types for reference
@@ -78,12 +56,28 @@ void drawSignalStrength()
 */
 XBeePacket remoteAtRequest = new XBeePacket(new int[]{0x17, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFE, 0x02, 0x44, 0x42});
 
+// Measurement code
+boolean saveMeasurements = false;
+String  measurementFileName = "experiment.csv";
+
+PrintWriter measurementWriter;  // do not edit
+boolean savingToFile;           // do not edit
+int numbersSaved;               // do not edit
+
+
 void setup()
-{
-  // create an empty list
-  for (int i = 0; i < 100; ++i)
+{    
+  // Measurement code
+  if (saveMeasurements)
   {
-    lastPackets.add(0);
+    try
+    {
+      measurementWriter = new PrintWriter(dataPath("") + "\\" + measurementFileName,"UTF-8");
+      savingToFile = true;
+      numbersSaved = 0;
+    } catch (Exception e) {
+      savingToFile = false;
+    } 
   }
   
   // load configuration
@@ -92,6 +86,10 @@ void setup()
   
   // make it full screen when using a cellphone
   size(640, 480);
+  
+  // create line plots
+  rssiPlot = new LinePlot(color(255,255,255), 2, 100, 640);
+  filteredPlot = new LinePlot(color(128,128,255), 3, 100, 640);
    
   try { 
     //optional.  set up logging
@@ -159,8 +157,10 @@ void draw() {
    
    text(currentSig, width/2, 3*height/4 + 20); 
    text(roundTripDistance, width/2, 3*height/4 + 50);
+   
    // print signal chart
-   drawSignalStrength();
+   filteredPlot.draw(0, 100);
+   rssiPlot.draw(0, 100);
 }
 
 /**
@@ -169,26 +169,55 @@ void draw() {
  TODO: This may be slow and non responsive
  TODO: This doesn't filter if there are multiple devices
 */
+
+
 void readPackets() throws Exception {
-  while ((response = queue.poll()) != null)
+  if ((response = queue.poll()) != null)
   {
     //  println("THIS IS A TEST " + response.getClass());
     // we got something!
-    if (response.getApiId() == ApiId.AT_RESPONSE)
+    if (response.getApiId() == ApiId.REMOTE_AT_RESPONSE)
     {
       // RSSI is only of last hop
-      //currentSig = ((AtCommandResponse)response).getValue()[0];
-      //updateQueue(currentSig);
       RemoteAtResponse atResponse = (RemoteAtResponse) response;
       // print remote address
-      println("remote at response received, remote address: " + atResponse.getRemoteAddress16());
+      //println("remote at response received, remote address: " + atResponse.getRemoteAddress16());
       if (atResponse.getValue().length > 0)
       {
-        println("RSSI: " + atResponse.getValue()[0]);
+        //println("RSSI: " + atResponse.getValue()[0]);
         currentSig = atResponse.getValue()[0];
+        rssiPlot.add(currentSig);
+        float smoothedSig = kalmanFilter.filter(currentSig, 0);
+        filteredPlot.add(smoothedSig);
+        
+        // BEGIN Measurement code
+        if (saveMeasurements)
+        {
+          if (savingToFile)                                                             
+          {                                                                           
+            Timestamp timestamp = new Timestamp(System.currentTimeMillis());          
+            measurementWriter.println(timestamp.getTime() + "," + currentSig + "," + smoothedSig);
+            println("\n\nNumbers saved: " + ++numbersSaved);                          
+          } else {                                                                    
+            measurementWriter.close();                                                
+            saveMeasurements = false;
+          }
+        }// END Measurement code
+        
+        
+        currentSig = smoothedSig;
       }
     }
     xbee.sendPacket(remoteAtRequest);
-    println("sent again");
+    //println("sent again");
+  }
+}
+
+void mouseClicked()
+{
+  // Measurement code
+  if (saveMeasurements)
+  {
+    savingToFile = false;  
   }
 }

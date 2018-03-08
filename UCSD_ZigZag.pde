@@ -56,12 +56,30 @@ KalmanFilter kalmanFilter = new KalmanFilter(0.008, 1, 1, 0, 1);
 */
 XBeePacket remoteAtRequest = new XBeePacket(new int[]{0x17, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFE, 0x02, 0x44, 0x42});
 
-//PrintWriter writer; // Measurement code
+// Measurement code
+boolean saveMeasurements = false;
+String  measurementFileName = "experiment.csv";
+
+PrintWriter measurementWriter;  // do not edit
+boolean savingToFile;           // do not edit
+int numbersSaved;               // do not edit
+
 
 void setup()
-{           
-  //try{writer = new PrintWriter(dataPath("") + "farcmaway.csv","UTF-8");} catch (Exception e){} // Measurement code
-
+{    
+  // Measurement code
+  if (saveMeasurements)
+  {
+    try
+    {
+      measurementWriter = new PrintWriter(dataPath("") + "\\" + measurementFileName,"UTF-8");
+      savingToFile = true;
+      numbersSaved = 0;
+    } catch (Exception e) {
+      savingToFile = false;
+    } 
+  }
+  
   // load configuration
   jsonConfig =  loadJSONObject("config.json");
   String serialPortName = jsonConfig.getString("SerialPort");
@@ -152,8 +170,6 @@ void draw() {
  TODO: This doesn't filter if there are multiple devices
 */
 
-boolean savingToFile = true;
-int numbersSaved = 0;
 
 void readPackets() throws Exception {
   if ((response = queue.poll()) != null)
@@ -174,14 +190,19 @@ void readPackets() throws Exception {
         float smoothedSig = kalmanFilter.filter(currentSig, 0);
         filteredPlot.add(smoothedSig);
         
-        //if (savingToFile)                                                             // Measurement code
-        //{                                                                             // Measurement code
-        //  Timestamp timestamp = new Timestamp(System.currentTimeMillis());            // Measurement code
-        //  writer.println(timestamp.getTime() + "," + currentSig + "," + smoothedSig); // Measurement code
-        //  println("\n\nNumbers saved: " + ++numbersSaved);                            // Measurement code
-        //} else {                                                                      // Measurement code
-        //  writer.close();                                                             // Measurement code
-        //}                                                                             // Measurement code
+        // BEGIN Measurement code
+        if (saveMeasurements)
+        {
+          if (savingToFile)                                                             
+          {                                                                           
+            Timestamp timestamp = new Timestamp(System.currentTimeMillis());          
+            measurementWriter.println(timestamp.getTime() + "," + currentSig + "," + smoothedSig);
+            println("\n\nNumbers saved: " + ++numbersSaved);                          
+          } else {                                                                    
+            measurementWriter.close();                                                
+            saveMeasurements = false;
+          }
+        }// END Measurement code
         
         
         currentSig = smoothedSig;
@@ -192,6 +213,11 @@ void readPackets() throws Exception {
   }
 }
 
-void mouseClicked() {
-  //savingToFile = false;  // Measurement code
+void mouseClicked()
+{
+  // Measurement code
+  if (saveMeasurements)
+  {
+    savingToFile = false;  
+  }
 }

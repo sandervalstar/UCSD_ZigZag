@@ -1,25 +1,25 @@
 class XBeeDeviceImpl implements XBeeDevice {
     private String address;
-    private float distance;
+    private float rssi;
     
     public XBeeDeviceImpl(String address) {
        this.address = address;
-       distance = 0f;
+       rssi = 0f;
     }
     
-    public float getDistance() {
+    public float getRSSI() {
         return 0;
     }
     
-    XBeeDevice updateDistance() {
+    XBeeDevice updateRSSI() {
         return null;
     }
     
-    XBeeAddress64 get64BitAddress() {
+    String get64BitAddress() {
         return null;
     }
    
-    XBeeAddress16 get16BitAddress(){
+    String get16BitAddress(){
         return null;
     }
   

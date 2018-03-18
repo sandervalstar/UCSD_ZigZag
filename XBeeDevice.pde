@@ -1,6 +1,6 @@
 interface XBeeDevice {
-   float getDistance();
-   XBeeDevice updateDistance();
-   XBeeAddress64 get64BitAddress();
-   XBeeAddress16 get16BitAddress();
+   float getRSSI();
+   XBeeDevice updateRSSI();
+   String get64BitAddress();
+   String get16BitAddress();
 }

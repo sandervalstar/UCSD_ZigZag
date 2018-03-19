@@ -9,12 +9,18 @@ class XBeeDeviceMock implements XBeeDevice {
     this.address64 = "Address-16-"+Math.random() * 100;
   }
   
+  public XBeeDeviceMock(String a1, String a2) {
+    this.rssi = (float)Math.random() * 100;
+    this.address16 = a1;
+    this.address64 = a2;
+  }
+  
    float getRSSI() {
      return this.rssi;
    }
    
    XBeeDevice updateRSSI() {
-     return new XBeeDeviceMock();
+     return new XBeeDeviceMock(this.address16, this.address64);
    }
    
    String get64BitAddress() {

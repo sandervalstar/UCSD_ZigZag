@@ -14,11 +14,13 @@ class ViewManager {
   int LINE_MARGIN = MARGIN3-5;
   int ARROW_LENGTH = 20;
   
+  boolean USE_MOCKS = true;
+  
   List<XBeeDevice> devices = new ArrayList();
-  private XBeeDevice device = new XBeeDeviceMock();
+  private XBeeDevice device;
   private final Object lock = new Object();
   
-  private LocationEstimator locationEstimator = new LocationEstimatorMock();
+  private LocationEstimator locationEstimator;
   
   private String nextMove = "";
   final String L = "left";
@@ -36,6 +38,13 @@ class ViewManager {
     this.app = app;
     //this.showHomeScreen();
     this.showLocatorScreen(device);
+    
+    if(USE_MOCKS) {
+      this.locationEstimator = new LocationEstimatorMock();
+      this.device = new XBeeDeviceMock();
+    } else {
+      //TODO: use real impl
+    }
   };
   
   public void draw() {
@@ -114,7 +123,15 @@ class ViewManager {
     this.clearScreen();
     drawPageTitle("XBee network");
     drawPageSubtitle(""+panId);
-    XBeeNetwork network = new XBeeNetworkMock(panId);
+    
+    XBeeNetwork network;
+    if(USE_MOCKS) {
+       network = new XBeeNetworkMock(panId);
+    } else {
+      //TODO: use real impl
+      network = null;
+    }
+    
     this.devices = network.getAllDevicesInNetwork();
     this.drawDevices();
   }
@@ -123,7 +140,12 @@ class ViewManager {
     this.activeScreen = LOCATOR;
     this.clearScreen();
     this.device = device;
-    this.locationEstimator = new LocationEstimatorMock();
+    
+    if(USE_MOCKS) {
+      this.locationEstimator = new LocationEstimatorMock();
+    } else {
+      //TODO: use real impl
+    }
     this.startMeasurements();
   }
   
@@ -194,7 +216,7 @@ class ViewManager {
     synchronized (lock) {
        if(MOVEMENT_POPUP.equals(activeScreen)) {
          println("Skipping RSSI update because of user movement");
-       } else {
+       } else if (this.device != null) {
          //println("udpating "+device.getRSSI());    
          this.device = this.device.updateRSSI();
          this.locationEstimator.addMeasurement(this.device.getRSSI());

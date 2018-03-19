@@ -12,6 +12,7 @@ class ViewManager {
   int MARGIN3 = 3*MARGIN;
   int DRAW_MARGIN = MARGIN3;
   int LINE_MARGIN = MARGIN3-5;
+  int ARROW_LENGTH = 20;
   
   List<XBeeDevice> devices = new ArrayList();
   private XBeeDevice device = new XBeeDeviceMock();
@@ -47,13 +48,18 @@ class ViewManager {
     }
   }
   
+  public void clearScreen() {
+    this.clearHomeScreen();
+  }
+  
   private void drawMovementButtons() {
     //rect(30, 20, 55, 55, 3, 6, 12, 18);
     strokeWeight(5); 
-    drawArrow(MARGIN3,height-30,20,180f);
-    drawArrow(width/2 - MARGIN3,height-MARGIN,20,270f);
-    drawArrow(width/2 + MARGIN3,height-MARGIN2,20,90f);
-    drawArrow(width-MARGIN3,height-30,20,0f);
+    drawArrow(MARGIN3,height-30,ARROW_LENGTH,180f);
+    line(10, height, 10, height-LINE_MARGIN);
+    drawArrow(width/2 - MARGIN3,height-MARGIN,ARROW_LENGTH,270f);
+    drawArrow(width/2 + MARGIN3,height-MARGIN2,ARROW_LENGTH,90f);
+    drawArrow(width-MARGIN3,height-30,ARROW_LENGTH,0f);
     strokeWeight(1); 
   }
   
@@ -65,12 +71,6 @@ class ViewManager {
     line(len, 0, len - 8, -8);
     line(len, 0, len - 8, 8);
     popMatrix();
-  }
-  
-  
-  
-  public void clearScreen() {
-    this.clearHomeScreen();
   }
   
   private void clearHomeScreen() {
@@ -153,13 +153,25 @@ class ViewManager {
         
       }        
       println("mouse presseed " + mouseY + ", index: "+deviceIndex);
+    } else if (LOCATOR.equals(activeScreen)) {
+      if(height-LINE_MARGIN < mouseY && mouseY < height) {
+        if(MARGIN3 <= mouseX && mouseX <= MARGIN3+ARROW_LENGTH) {
+          println("click left");
+        } else if (width/2 - MARGIN3 <= mouseX && mouseX <= width/2 - MARGIN3+ARROW_LENGTH) {
+          println("click up");
+        } else if (width/2 + MARGIN3 <= mouseX && mouseX <= width/2 + MARGIN3+ARROW_LENGTH) {
+          println("click down");
+        } else if (width-MARGIN3 <= mouseX && mouseX <= width-MARGIN3+ARROW_LENGTH) {
+          println("click right");
+        }
+      }
     }
   }
   
   
   void updateDeviceRSSI() {
     synchronized (lock) {
-       println("udpating "+device.getRSSI());    
+       //println("udpating "+device.getRSSI());    
        this.device = this.device.updateRSSI();
        this.locationEstimator.addMeasurement(this.device.getRSSI());
     }
@@ -174,7 +186,7 @@ class ViewManager {
       public void run() {
         try {
           updateDeviceRSSI();
-          println("measuring");
+          //println("measuring");
         } catch (Exception e) {
           e.printStackTrace();
         }

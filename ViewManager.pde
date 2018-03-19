@@ -9,7 +9,8 @@ class ViewManager {
   int MARGIN = 20;
   int MARGIN2 = 2*MARGIN;
   List<XBeeDevice> devices = new ArrayList();
-  XBeeDevice device;
+  private XBeeDevice device = new XBeeDeviceMock();
+  private final Object lock = new Object();
   
   final String HOME = "HOME";
   final String NETWORK = "NETWORK";
@@ -18,15 +19,21 @@ class ViewManager {
       
   public ViewManager(PApplet app) {
     this.app = app;
-    this.showHomeScreen();
+    //this.showHomeScreen();
+    this.showLocatorScreen(device);
   };
   
   public void draw() {
     if(LOCATOR.equals(activeScreen)) {
-      background(0);
-      this.drawPageTitle(device.get16BitAddress());
-      textAlign(LEFT,BOTTOM);
-      text(this.device.getRSSI(), 100, 100);
+      synchronized(lock) {
+        background(0);
+        this.drawPageTitle(device.get16BitAddress());
+        textAlign(LEFT,BOTTOM);
+        text(this.device.getRSSI(), 100, 100);
+        fill(color(255,0,0));
+        ellipse(width/2, height/2, 10, 10);
+        fill(color(255,255,255));
+      }
     }
   }
   
@@ -36,8 +43,10 @@ class ViewManager {
   
   private void clearHomeScreen() {
     background(0);
-    this.c.remove(t);
-    joinButton.setY(height+100); //hack because interfascia has a bug that doesn't let us remove buttons
+    if(this.c != null) {
+      this.c.remove(t);
+      joinButton.setY(height+100); //hack because interfascia has a bug that doesn't let us remove buttons
+    }
   }
   
   public void showHomeScreen() {
@@ -116,8 +125,10 @@ class ViewManager {
   
   
   void updateDeviceRSSI() {
-     println("udpating "+device.getRSSI());
-     this.device = this.device.updateRSSI();
+    synchronized (lock) {
+       println("udpating "+device.getRSSI());    
+       this.device = this.device.updateRSSI();
+    }
   }   
   
   void startMeasurements() {

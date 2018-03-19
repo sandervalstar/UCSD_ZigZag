@@ -1,6 +1,6 @@
 interface XBeeDevice {
  float getCurrentRSSI();
- float getNewRSSI();
+ XBeeDevice getNewRSSI();
  String getName();
  String get64BitAddress();
 }

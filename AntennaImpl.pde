@@ -19,17 +19,24 @@ public class AntennaImpl implements Antenna {
   }
   
   public void setPanId(int panId) {
-    //AtCommand atid = new AtCommand("ID", 123); 
+    //AtCommand  at = new AtCommand("ID", new int[] {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x7B});
     //try {
     //  println("going to set panid");
-    //  AtCommandResponse response = (AtCommandResponse) xbee.sendSynchronous(atid, 5000);
+    //  AtCommandResponse response = (AtCommandResponse) xbee.sendSynchronous(at, 5000);
+    //  xbee.clearResponseQueue();
     //  println(response.getApiId());
     //  println("going to check current pan id");
     //  AtCommand currentid = new AtCommand("ID"); 
-    //  response = (AtCommandResponse) xbee.sendSynchronous(currentid, 5000);
-    //  if (response.getApiId() == ApiId.AT_RESPONSE) {
+    //  AtCommandResponse response2 = (AtCommandResponse) xbee.sendSynchronous(currentid, 5000);
+    //  println(response2.getApiId());
+    //  if (response2.getApiId() == ApiId.AT_RESPONSE) {
     //    println("pan id request response");
-    //    println("pan id set to: " + response.getValue()[0]);
+    //    int[] responsearr = response2.getValue();
+    //    println("panid; " );
+    //    for (int i = 0; i < responsearr.length; i++) {
+    //      print(responsearr[i] + " " );
+    //    }
+    //    println();
     //  }
     //} catch (Exception excep) {
     //    println("error sending remote at command " + excep); 
@@ -38,6 +45,9 @@ public class AntennaImpl implements Antenna {
   
   public List<? extends XBeeResponse> sendNodeDiscovery() {
     try {
+      
+      //XBeeResponse timeout = xbee.sendSynchronous(new AtCommand("NT", 60), 5000);
+      //xbee.clearResponseQueue();
       // get the Node discovery timeout
       xbee.sendAsynchronous(new AtCommand("NT"));
       AtCommandResponse nodeTimeout = (AtCommandResponse) xbee.getResponse();
@@ -50,7 +60,7 @@ public class AntennaImpl implements Antenna {
       xbee.sendAsynchronous(new AtCommand("ND")); 
       return xbee.collectResponses(nodeDiscoveryTimeout);
     } catch (XBeeException exception) {
-      println("error discovering nodes");
+      println("error discovering nodes " + exception);
     }
     
     return null;

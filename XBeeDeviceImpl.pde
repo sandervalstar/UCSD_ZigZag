@@ -4,20 +4,20 @@ class XBeeDeviceImpl implements XBeeDevice {
   private float rssi;
   private Antenna antenna;
   
-  public XBeeDeviceImpl(String name, XBeeAddress64 address64, Antenna antenna) {
+  public XBeeDeviceImpl(String name, XBeeAddress64 address64, Antenna antenna, float rssi) {
     this.name = name; 
     this.address64 = address64;
-    this.rssi = 0;
+    this.rssi = rssi;
     this.antenna = antenna;
   }
   
   public float getCurrentRSSI() {
-    return this.rssi;
+    return this.rssi; 
   }
   
-  float getNewRSSI() {
+  public XBeeDevice getNewRSSI() {
     this.rssi = this.antenna.getRemoteRSSI(this.address64);
-    return this.rssi;
+    return new XBeeDeviceImpl(this.name, this.address64, this.antenna, this.rssi);
   }
   
   String get64BitAddress() {

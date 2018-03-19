@@ -31,14 +31,20 @@ public class XBeeNetworkImpl implements XBeeNetwork {
       List<? extends XBeeResponse> responses = antenna.sendNodeDiscovery();             
       println("number of responses: " + responses.size());
       for (XBeeResponse response : responses) {
+        println("Add response " + response.getApiId() + " " + response.getClass());
         if (response instanceof AtCommandResponse) {
+          println("Add response 2");
           AtCommandResponse atResponse = (AtCommandResponse) response;
           
           if (atResponse.getCommand().equals("ND") && atResponse.getValue() != null && atResponse.getValue().length > 0) {
+            println("Add response 3");
             ZBNodeDiscover nd = ZBNodeDiscover.parse((AtCommandResponse) response);
-            XBeeDevice device = new XBeeDeviceImpl(nd.getNodeIdentifier(), nd.getNodeAddress64(), this.antenna);
+            XBeeDevice device = new XBeeDeviceImpl(nd.getNodeIdentifier(), nd.getNodeAddress64(), this.antenna, 0);
             deviceList.add(device);             
           }
+        } else if (response instanceof ErrorResponse) {
+            ErrorResponse error = (ErrorResponse) response;
+            println("error messsage: " + error.getErrorMsg());
         }
       }
     } catch (Exception excep) {

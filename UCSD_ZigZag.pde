@@ -70,9 +70,12 @@ void setup()
 }
 
 void actionPerformed(GUIEvent e) {
-  println("sdfkjsdflksdjfksdjf");
+  this.viewManager.actionPerformed(e);
 }
 
+void mousePressed() {
+  this.viewManager.mousePressed();
+}
 
 void draw() {
   viewManager.draw();

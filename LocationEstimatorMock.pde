@@ -4,7 +4,7 @@ class LocationEstimatorMock implements LocationEstimator {
   List<Point2D.Float> locations = new ArrayList();
   
   void addMeasurement(float rssi) {
-    this.locations.add(new Point2D.Float(rssi/20, rssi/20));
+    this.locations.add(new Point2D.Float((float)Math.random()*rssi/20, (float)Math.random()*rssi/20));
   }
   
   void addUserMovement(float x, float y) {

@@ -1,4 +1,5 @@
 import java.util.concurrent.*;
+import java.awt.geom.Point2D;
 import interfascia.*;
 
 class ViewManager {  
@@ -11,6 +12,8 @@ class ViewManager {
   List<XBeeDevice> devices = new ArrayList();
   private XBeeDevice device = new XBeeDeviceMock();
   private final Object lock = new Object();
+  
+  private LocationEstimator locationEstimator = new LocationEstimatorMock();
   
   final String HOME = "HOME";
   final String NETWORK = "NETWORK";
@@ -33,9 +36,13 @@ class ViewManager {
         fill(color(255,0,0));
         ellipse(width/2, height/2, 10, 10);
         fill(color(255,255,255));
+        List<Point2D.Float> locations = this.locationEstimator.getProbableLocations();
+        drawProbableLocations(locations);
       }
     }
   }
+  
+  
   
   public void clearScreen() {
     this.clearHomeScreen();
@@ -79,6 +86,7 @@ class ViewManager {
     this.activeScreen = LOCATOR;
     this.clearScreen();
     this.device = device;
+    this.locationEstimator = new LocationEstimatorMock();
     this.startMeasurements();
   }
   
@@ -128,6 +136,7 @@ class ViewManager {
     synchronized (lock) {
        println("udpating "+device.getRSSI());    
        this.device = this.device.updateRSSI();
+       this.locationEstimator.addMeasurement(this.device.getRSSI());
     }
   }   
   
@@ -154,5 +163,25 @@ class ViewManager {
   void stopMeasurements() {
     
   } 
+  
+  private void drawProbableLocations(List<Point2D.Float> locations) {
+    float max = Float.MIN_VALUE;
+    float min = Float.MAX_VALUE;
+    float sum = 0f;
+    
+    for(Point2D.Float p : locations) {
+      if(max < p.x) max = p.x;
+      if(min > p.x) min = p.x;
+      if(max < p.y) max = p.y;
+      if(min > p.y) min = p.y;
+      sum += p.x + p.y;
+    }
+    
+    float average = sum / (2*locations.size());
+    
+    for(Point2D.Float p : locations) {
+      ellipse(map(p.x, min, max, 0, width), map(p.y, min, max, 0, height), 5, 5);
+    }
+  }
   
 }

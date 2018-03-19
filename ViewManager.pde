@@ -9,6 +9,10 @@ class ViewManager {
   IFButton joinButton;
   int MARGIN = 20;
   int MARGIN2 = 2*MARGIN;
+  int MARGIN3 = 3*MARGIN;
+  int DRAW_MARGIN = MARGIN3;
+  int LINE_MARGIN = MARGIN3-5;
+  
   List<XBeeDevice> devices = new ArrayList();
   private XBeeDevice device = new XBeeDeviceMock();
   private final Object lock = new Object();
@@ -32,14 +36,35 @@ class ViewManager {
         background(0);
         this.drawPageTitle(device.get16BitAddress());
         textAlign(LEFT,BOTTOM);
-        text(this.device.getRSSI(), 100, 100);
+        //text(this.device.getRSSI(), 100, 100);
         fill(color(255,0,0));
         ellipse(width/2, height/2, 10, 10);
         fill(color(255,255,255));
         List<Point2D.Float> locations = this.locationEstimator.getProbableLocations();
         drawProbableLocations(locations);
+        drawMovementButtons();        
       }
     }
+  }
+  
+  private void drawMovementButtons() {
+    //rect(30, 20, 55, 55, 3, 6, 12, 18);
+    strokeWeight(5); 
+    drawArrow(MARGIN3,height-30,20,180f);
+    drawArrow(width/2 - MARGIN3,height-MARGIN,20,270f);
+    drawArrow(width/2 + MARGIN3,height-MARGIN2,20,90f);
+    drawArrow(width-MARGIN3,height-30,20,0f);
+    strokeWeight(1); 
+  }
+  
+  void drawArrow(int cx, int cy, int len, float angle){
+    pushMatrix();
+    translate(cx, cy);
+    rotate(radians(angle));
+    line(0,0,len, 0);
+    line(len, 0, len - 8, -8);
+    line(len, 0, len - 8, 8);
+    popMatrix();
   }
   
   
@@ -180,8 +205,12 @@ class ViewManager {
     float average = sum / (2*locations.size());
     
     for(Point2D.Float p : locations) {
-      ellipse(map(p.x, min, max, 0, width), map(p.y, min, max, 0, height), 5, 5);
+      ellipse(map(p.x, min, max, 0, width), map(p.y, min, max, DRAW_MARGIN, height-DRAW_MARGIN), 5, 5);
     }
+    
+    stroke(255);
+    //line(0, MARGIN2, width, MARGIN2);
+    line(0, height-LINE_MARGIN, width, height-LINE_MARGIN);
   }
   
 }

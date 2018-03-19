@@ -20,9 +20,16 @@ class ViewManager {
   
   private LocationEstimator locationEstimator = new LocationEstimatorMock();
   
+  private String nextMove = "";
+  final String L = "left";
+  final String R = "right";
+  final String U = "up";
+  final String D = "down";
+  
   final String HOME = "HOME";
   final String NETWORK = "NETWORK";
   final String LOCATOR = "LOCATOR";
+  final String MOVEMENT_POPUP = "MOVEMENT_POPUP";
   String activeScreen = "";
       
   public ViewManager(PApplet app) {
@@ -32,18 +39,22 @@ class ViewManager {
   };
   
   public void draw() {
-    if(LOCATOR.equals(activeScreen)) {
+    fill(color(255,255,255));
+    if(LOCATOR.equals(activeScreen) || MOVEMENT_POPUP.equals(activeScreen)) {
       synchronized(lock) {
         background(0);
         this.drawPageTitle(device.get16BitAddress());
         textAlign(LEFT,BOTTOM);
         //text(this.device.getRSSI(), 100, 100);
         fill(color(255,0,0));
-        ellipse(width/2, height/2, 10, 10);
+        ellipse(width/2, (height-2*DRAW_MARGIN)/2+DRAW_MARGIN, 10, 10);
         fill(color(255,255,255));
         List<Point2D.Float> locations = this.locationEstimator.getProbableLocations();
         drawProbableLocations(locations);
-        drawMovementButtons();        
+        drawMovementButtons();
+        if(MOVEMENT_POPUP.equals(activeScreen)) {
+          drawMovementPopup();
+        }
       }
     }
   }
@@ -53,10 +64,11 @@ class ViewManager {
   }
   
   private void drawMovementButtons() {
-    //rect(30, 20, 55, 55, 3, 6, 12, 18);
+    line(width/2, height, width/2, height-LINE_MARGIN);
+    line(width/4, height, width/4, height-LINE_MARGIN);
+    line(3*width/4, height, 3*width/4, height-LINE_MARGIN);
     strokeWeight(5); 
     drawArrow(MARGIN3,height-30,ARROW_LENGTH,180f);
-    line(10, height, 10, height-LINE_MARGIN);
     drawArrow(width/2 - MARGIN3,height-MARGIN,ARROW_LENGTH,270f);
     drawArrow(width/2 + MARGIN3,height-MARGIN2,ARROW_LENGTH,90f);
     drawArrow(width-MARGIN3,height-30,ARROW_LENGTH,0f);
@@ -155,14 +167,23 @@ class ViewManager {
       println("mouse presseed " + mouseY + ", index: "+deviceIndex);
     } else if (LOCATOR.equals(activeScreen)) {
       if(height-LINE_MARGIN < mouseY && mouseY < height) {
-        if(MARGIN3 <= mouseX && mouseX <= MARGIN3+ARROW_LENGTH) {
-          println("click left");
-        } else if (width/2 - MARGIN3 <= mouseX && mouseX <= width/2 - MARGIN3+ARROW_LENGTH) {
-          println("click up");
-        } else if (width/2 + MARGIN3 <= mouseX && mouseX <= width/2 + MARGIN3+ARROW_LENGTH) {
-          println("click down");
-        } else if (width-MARGIN3 <= mouseX && mouseX <= width-MARGIN3+ARROW_LENGTH) {
-          println("click right");
+        if(0 <= mouseX && mouseX < width/4) {
+          this.nextMove = L;
+        } else if (width/4 <= mouseX && mouseX < width/2) {
+          this.nextMove = U;
+        } else if (width/2 <= mouseX && mouseX < 3*width/4) {
+          this.nextMove = D;
+        } else if (3*width/4 <= mouseX && mouseX <= width) {
+          this.nextMove = R;
+        }
+        
+        this.drawMovementPopup();
+      }
+    } else if (MOVEMENT_POPUP.equals(activeScreen)) {
+      if(height/2-MARGIN2 < mouseY && mouseY < height/2) {
+        if(100+MARGIN <= mouseX && mouseX < 100+MARGIN+width/2) {
+          closeMovementPopup();
+          doMove();
         }
       }
     }
@@ -171,9 +192,13 @@ class ViewManager {
   
   void updateDeviceRSSI() {
     synchronized (lock) {
-       //println("udpating "+device.getRSSI());    
-       this.device = this.device.updateRSSI();
-       this.locationEstimator.addMeasurement(this.device.getRSSI());
+       if(MOVEMENT_POPUP.equals(activeScreen)) {
+         println("Skipping RSSI update because of user movement");
+       } else {
+         //println("udpating "+device.getRSSI());    
+         this.device = this.device.updateRSSI();
+         this.locationEstimator.addMeasurement(this.device.getRSSI());
+       }
     }
   }   
   
@@ -216,13 +241,80 @@ class ViewManager {
     
     float average = sum / (2*locations.size());
     
-    for(Point2D.Float p : locations) {
-      ellipse(map(p.x, min, max, 0, width), map(p.y, min, max, DRAW_MARGIN, height-DRAW_MARGIN), 5, 5);
+    float absMin = Math.abs(min);
+    if(absMin > max) {
+      max = absMin;
+    } else {
+      min = -max;
     }
+    
+    for(Point2D.Float p : locations) {
+      ellipse(
+        scalePointCoordinate(p.x, min, max, 0, width), 
+        scalePointCoordinate(-p.y, min, max, DRAW_MARGIN, height-DRAW_MARGIN),
+        5, 5);
+    }
+    
+    ////draw the axis
+    //fill(0,255,0);
+    ////print("min: "+min+" max "+max);
+    //for(float i = min; i < max; i++) {
+    //  ellipse(
+    //    scalePointCoordinate(i, min, max, 0, width), 
+    //    scalePointCoordinate(0, min, max, DRAW_MARGIN, height-DRAW_MARGIN),
+    //    5, 5);
+        
+    //   ellipse(
+    //    scalePointCoordinate(0, min, max, 0, width), 
+    //    scalePointCoordinate(-i, min, max, DRAW_MARGIN, height-DRAW_MARGIN),
+    //    5, 5);
+    //}
+        
     
     stroke(255);
     //line(0, MARGIN2, width, MARGIN2);
     line(0, height-LINE_MARGIN, width, height-LINE_MARGIN);
+  }
+  
+  private float scalePointCoordinate(float val, float min, float max, float targetMin, float targetMax) {
+    float center = (targetMax-targetMin)/2+targetMin;
+    return val < 0 ? map(val, min, 0, targetMin, center) : map(val, 0, max, center, targetMax);
+  }
+  
+  private void drawMovementPopup() {
+    this.activeScreen = MOVEMENT_POPUP;
+    
+    rect(100, 100, width-200, height-400, 6, 6, 6, 6);
+    fill(0,0,0);
+    textAlign(CENTER,TOP);
+    text("Take one step " + this.nextMove, width/2, height/4);
+    
+    rect(100+MARGIN, height/2-MARGIN2, width/2, MARGIN2, 6, 6, 6, 6);
+    fill(255,255,255);
+    text("DONE",width/2,height/2-30);
+  }
+  
+  private void closeMovementPopup() {
+    this.activeScreen = LOCATOR;
+  }
+  
+  private void doMove() {
+    synchronized(lock) {
+      switch(nextMove) {
+        case L:
+          this.locationEstimator.addUserMovement(-1f, 0f);
+          break;
+        case U:
+          this.locationEstimator.addUserMovement(0f, 1f);
+          break;
+        case D:
+          this.locationEstimator.addUserMovement(0f, -1f);
+          break;
+        case R:
+          this.locationEstimator.addUserMovement(1f, 0f);
+          break;
+      }
+    }
   }
   
 }

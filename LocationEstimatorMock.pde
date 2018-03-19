@@ -14,8 +14,15 @@ class LocationEstimatorMock implements LocationEstimator {
     }
   }
   
-  List<Point2D.Float> getEstimatedLocations() {
+  List<Point2D.Float> getProbableLocations() {
     return this.locations;
+  }
+  
+  Point2D.Float getEstimatedLocation() {
+    if(this.locations.size() > 0) {
+      return this.locations.get(0); 
+    }
+    return null;
   }
   
 }

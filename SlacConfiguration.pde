@@ -5,12 +5,18 @@ class SlacConfiguration
   {
     private int N;
     private int effectiveParticleThreshold;
+    private int sd;
+    private int randomN;
+    private int maxVariance: 4;
     
     // =========================== particle configuration =================================//
     public ParticleConfiguration()
     {
       N = 30;
       effectiveParticleThreshold = 15;
+      sd = 1;
+      randomN = 0;
+      maxVariance = 4;
     }
     
     public void setN(int N)
@@ -24,7 +30,10 @@ class SlacConfiguration
     }
     
     public int getN() { return this.N; }
-    public int getEffectiveParticleThreshold() { return effectiveParticleThreshold; }    
+    public int getEffectiveParticleThreshold() { return effectiveParticleThreshold; }
+    public int getSd() { return this.N; }
+    public int getRandomN() { return this.N; }
+    public int getMaxVariance() { return this.N; }
   }
   
   private ParticleConfiguration particles;

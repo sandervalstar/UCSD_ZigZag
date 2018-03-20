@@ -15,6 +15,7 @@ class XBeeDeviceMock implements XBeeDevice {
     this.rssi = (float)Math.random() * 100;
     this.address16 = a1;
     this.address64 = a2;
+    this.name = "router";
   }
   
    float getCurrentRSSI() {
@@ -33,6 +34,9 @@ class XBeeDeviceMock implements XBeeDevice {
    }
    
    String getName() {
-     return this.name;
+     if (this.name == null || this.name.isEmpty()) {
+      return this.get64BitAddress(); 
+    }
+    return this.name; 
    }
 }

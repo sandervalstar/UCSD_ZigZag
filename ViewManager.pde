@@ -44,7 +44,7 @@ class ViewManager {
       this.device = new XBeeDeviceMock();
     } else {
       //TODO: use real impl
-     this.locationEstimator = new LocationEstimatorMock();
+      this.locationEstimator = new LocationEstimatorMock();
       this.device = new XBeeDeviceMock();
     }
   };
@@ -54,7 +54,6 @@ class ViewManager {
     if(LOCATOR.equals(activeScreen) || MOVEMENT_POPUP.equals(activeScreen)) {
       synchronized(lock) {
         if (device != null) {
-          println("draw: " + device.getName());
           background(0);
           this.drawPageTitle(device.getName());
           textAlign(LEFT,BOTTOM);

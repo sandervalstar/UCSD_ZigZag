@@ -1,8 +1,8 @@
 class Landmark
 {
-  double x, y;
-  String name;
-  double[][] cov;
+  private double x, y;
+  private String name;
+  private double[][] cov;
   
   public Landmark(double x, double y, String name, double[][] cov)
   {
@@ -23,5 +23,11 @@ class Landmark
      
      return new Landmark(x, y, name, newCov);
   }
+  
+  public double getX() { return this.x; }
+  public double getY() { return this.y; }
+  public String getName() { return this.name; }
+  public double[][] getCov() { return this.cov; }
+  
 
 }

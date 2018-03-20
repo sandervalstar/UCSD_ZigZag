@@ -1,0 +1,5 @@
+#!/bin/bash
+
+for filename in ../*.pde; do
+    cp $filename ../java/src/$(basename "$filename" .pde).java
+done

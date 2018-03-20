@@ -4,24 +4,33 @@
 //ported from https://github.com/wouterbulten/slacjs/blob/e21748e5c11f1eb6357dc528bc60a4645ff09e22/src/app/models/particle.js
 
 class Particle {
-  ///**
-  // * Create a new particle
-  // * @param  {object} userConfig
-  // * @return {Particle}
-  // */
-  //constructor(userConfig, parent = undefined) {
-
-  //  if (parent !== undefined) {
-  //    this.user = User.copyUser(parent.user);
-  //    this.landmarks = this._copyMap(parent.landmarks);
-  //  }
-  //  else {
-  //    this.user = new User(userConfig.defaultPose, userConfig);
-  //    this.landmarks = new Map();
-  //  }
-
-  //  this.weight = 1;
-  //}
+  
+  
+  float weight;
+  User user;
+  
+  /**
+   * Create a new particle
+   * @return {Particle}
+   */
+  public Particle(SlacConfiguration config)
+  {
+    this.user = new User(config);
+    //this.landmarks = new Map();
+    this.weight = 1;
+  }
+  
+  /**
+   * Create a new particle
+   * @param {Particle} 
+   * @return {Particle}
+   */
+  public Particle(Particle parent)
+  {
+      this.user = parent.user.getCopy();
+      //this.landmarks = this._copyMap(parent.landmarks);
+      this.weight = 1;
+  }
 
   ///**
   // * Given a control, sample a new user position

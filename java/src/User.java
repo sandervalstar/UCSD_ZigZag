@@ -2,7 +2,7 @@
 
 class User
 {
-  double x, y, theta;
+  private double x, y, theta;
   
   SlacConfiguration config;
   

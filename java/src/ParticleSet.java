@@ -70,6 +70,9 @@ class ParticleSet {
 
         if (pe.estimate > 0.6) {
           for(int i = 0; i < this.particleList.size(); i++) {
+            // This used to be
+            // this.particleList.get(i).addLandmark(uid, r, name, moved, pe.x, pe.y, pe.varX, pe.varY);
+            // TODO: Find out why "moved" is missing!!!!
             this.particleList.get(i).addLandmark(uid, r, name, pe.x, pe.y, pe.varX, pe.varY);
           }
 
@@ -79,6 +82,9 @@ class ParticleSet {
       }
       else {
         for(int i = 0; i < this.particleList.size(); i++) {
+          // This used to be
+          //  this.particleList.get(i).processObservation(String uid, double r, String name, boolean moved);
+          // TODO: Find out WHY "moved" is missing!!!!
           this.particleList.get(i).processObservation(uid, r);
         }
       }
@@ -124,7 +130,7 @@ class ParticleSet {
     Particle best = this.particleList.get(0);
     
     for(Particle p : this.particleList) {
-      if (p.weight > best.weight) {
+      if (p.getWeight() > best.getWeight()) {
         best = p;
       }
     }
@@ -172,7 +178,7 @@ class ParticleSet {
   private double userEstimateX() {
     double x = 0;
     for(Particle p : this.particleList) {
-      x += p.weight*p.user.x;
+      x += p.getWeight()*p.getUser().getPositionX();
     }
     
     return x;
@@ -181,7 +187,7 @@ class ParticleSet {
   private double userEstimateY() {
     double y = 0;
     for(Particle p : this.particleList) {
-      y += p.weight*p.user.y;
+      y += p.getWeight()*p.getUser().getPositionY();
     }
     
     return y;
@@ -239,7 +245,7 @@ class ParticleSet {
   public List<Double> getWeightMappings(List<Particle> particles) {
    List<Double> weights = new ArrayList<Double>();
    for (Particle particle : particles) {
-       weights.add(particle.weight);
+       weights.add(particle.getWeight());
    }
    return weights;
  }

@@ -5,9 +5,13 @@ import java.util.Iterator;
 //ported from https://github.com/wouterbulten/slacjs/blob/e21748e5c11f1eb6357dc528bc60a4645ff09e22/src/app/models/particle.js
 class Particle {
   
-  double weight;
-  User user;
-  Map<String, Landmark> landmarks;
+  private double weight;
+  private User user;
+  private Map<String, Landmark> landmarks;
+  
+  public double getWeight() { return weight; }
+  public User getUser() { return user; }
+  
   
   /**
    * Create a new particle

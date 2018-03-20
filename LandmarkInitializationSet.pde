@@ -14,17 +14,17 @@ class LandmarkInitializationSet {
    * @param  {Number} maxVariance
    * @return {LandmarkInitializationSet}
    */
-  public LandmarkInitializationSet constructor(int N, int sd, int randomN, int effectiveParticleThreshold, int maxVariance) {
-    this.nParticles = N;
-    this.stdRange = sd;
-    this.randomParticles = randomN;
-    this.maxVariance = maxVariance;
+  public LandmarkInitializationSet constructor(SlacConfiguration slacConfig) {
+    this.nParticles = slacConfig.getParticles().getN();
+    this.stdRange = slacConfig.getParticles().getSd();
+    this.randomParticles = slacConfig.getParticles().getRandomN();
+    this.maxVariance = slacConfig.getParticles().getMaxVariance();
 
     if (effectiveParticleThreshold == null) {
       this.effectiveParticleThreshold = nParticles / 1.5;
     }
     else {
-      this.effectiveParticleThreshold = effectiveParticleThreshold;
+      this.effectiveParticleThreshold = slacConfig.getParticles().getEffectiveParticleThreshold();
     }
 
     this.particleSetMap = new HashMap();

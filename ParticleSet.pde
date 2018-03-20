@@ -115,7 +115,7 @@ class ParticleSet
       System.out.println("resampling");
       Set<Integer> lowVarSampl = lowVarianceSampling(this.nParticles, weights);
       this.particleList = new ArrayList();
-      for (Integer i : lowVarSampl) \
+      for (Integer i : lowVarSampl) 
       {
         this.particleList.add(new Particle(this.particleList.get(i)));
       } 

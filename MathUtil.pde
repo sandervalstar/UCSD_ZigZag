@@ -1,5 +1,5 @@
 // based of https://github.com/wouterbulten/slacjs/blob/e21748e5c11f1eb6357dc528bc60a4645ff09e22/src/app/util/math.js
-class MathUtil
+static class MathUtil
 {
 
   /**

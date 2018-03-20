@@ -3,8 +3,8 @@ class SlacConfiguration
  
   class ParticleConfiguration
   {
-    private int N;
-    private int effectiveParticleThreshold;
+    private int N, initN;
+    private int effectiveParticleThreshold, initEffectiveParticleThreshold;
     private int sd;
     private int randomN;
     private int maxVariance;
@@ -14,6 +14,10 @@ class SlacConfiguration
     {
       N = 30;
       effectiveParticleThreshold = 15;
+      
+      initN = 200;
+      initEffectiveParticleThreshold = 75;
+      
       sd = 1;
       randomN = 0;
       maxVariance = 4;
@@ -31,6 +35,10 @@ class SlacConfiguration
     
     public int getN() { return this.N; }
     public int getEffectiveParticleThreshold() { return effectiveParticleThreshold; }
+
+    public int getInitN() { return this.initN; }
+    public int getInitEffectiveParticleThreshold() { return initEffectiveParticleThreshold; }
+    
     public int getSd() { return this.sd; }
     public int getRandomN() { return this.randomN; }
     public int getMaxVariance() { return this.maxVariance; }
@@ -51,7 +59,7 @@ class SlacConfiguration
     { 
       stepSize  = 0.6f;
       sdStep    = 0.15f;
-      sdHeading = 0.1;
+      sdHeading = 0.1f;
     }
     
     public double getStepSize() { return this.stepSize; }

@@ -21,7 +21,7 @@ class LandmarkInitializationSet {
    * @return {LandmarkInitializationSet}
    */
   public LandmarkInitializationSet(SlacConfiguration slacConfig) {
-    this.nParticles = slacConfig.getParticles().getN();
+    this.nParticles = slacConfig.getParticles().getInitN();
     this.stdRange = slacConfig.getParticles().getSd();
     this.randomParticles = slacConfig.getParticles().getRandomN();
     this.maxVariance = slacConfig.getParticles().getMaxVariance();
@@ -30,7 +30,7 @@ class LandmarkInitializationSet {
       this.effectiveParticleThreshold = nParticles / 1.5;
     }
     else {
-      this.effectiveParticleThreshold = slacConfig.getParticles().getEffectiveParticleThreshold();
+      this.effectiveParticleThreshold = slacConfig.getParticles().getInitEffectiveParticleThreshold();
     }
 
     this.particleSetMap = new HashMap();

@@ -34,23 +34,29 @@ class SlacConfiguration
   
   class PedometerConfiguration
   {
-    float stepSize; // in meters
-    float sdStep;   // standard deviation per step
+    float stepSize;   // in meters
+    float sdStep;     // standard deviation per step
+    float sdHeading;  // standard deviation of direction angle (theta)
     
     public PedometerConfiguration()
     { 
-      stepSize = 0.6f;
-      sdStep   = 0.15f;
+      stepSize  = 0.6f;
+      sdStep    = 0.15f;
+      sdHeading = 0.1;
     }
     
     public float getStepSize() { return this.stepSize; }
     public float getStepSD() { return this.sdStep; }
+    public float getHeadingSD() { return this.sdHeading; }
+    
     public void setStepSize(float stepSize) { this.stepSize = stepSize; }
     public void setStepSD(float sdStep) { this.sdStep = sdStep; }
+    public void setHeadingSD(float sdHeading) { this.sdHeading = sdHeading; }
   }
   
   private PedometerConfiguration pedometer;
   public PedometerConfiguration getPedometer() { return this.pedometer; }
+  
   
   // ======================== sensor ================================================//
   

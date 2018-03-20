@@ -7,7 +7,7 @@ class SlacConfiguration
     private int effectiveParticleThreshold;
     private int sd;
     private int randomN;
-    private int maxVariance: 4;
+    private int maxVariance;
     
     // =========================== particle configuration =================================//
     public ParticleConfiguration()
@@ -31,9 +31,9 @@ class SlacConfiguration
     
     public int getN() { return this.N; }
     public int getEffectiveParticleThreshold() { return effectiveParticleThreshold; }
-    public int getSd() { return this.N; }
-    public int getRandomN() { return this.N; }
-    public int getMaxVariance() { return this.N; }
+    public int getSd() { return this.sd; }
+    public int getRandomN() { return this.randomN; }
+    public int getMaxVariance() { return this.maxVariance; }
   }
   
   private ParticleConfiguration particles;
@@ -43,9 +43,9 @@ class SlacConfiguration
   
   class PedometerConfiguration
   {
-    float stepSize;   // in meters
-    float sdStep;     // standard deviation per step
-    float sdHeading;  // standard deviation of direction angle (theta)
+    double stepSize;   // in meters
+    double sdStep;     // standard deviation per step
+    double sdHeading;  // standard deviation of direction angle (theta)
     
     public PedometerConfiguration()
     { 
@@ -54,13 +54,13 @@ class SlacConfiguration
       sdHeading = 0.1;
     }
     
-    public float getStepSize() { return this.stepSize; }
-    public float getStepSD() { return this.sdStep; }
-    public float getHeadingSD() { return this.sdHeading; }
+    public double getStepSize() { return this.stepSize; }
+    public double getStepSD() { return this.sdStep; }
+    public double getHeadingSD() { return this.sdHeading; }
     
-    public void setStepSize(float stepSize) { this.stepSize = stepSize; }
-    public void setStepSD(float sdStep) { this.sdStep = sdStep; }
-    public void setHeadingSD(float sdHeading) { this.sdHeading = sdHeading; }
+    public void setStepSize(double stepSize) { this.stepSize = stepSize; }
+    public void setStepSD(double sdStep) { this.sdStep = sdStep; }
+    public void setHeadingSD(double sdHeading) { this.sdHeading = sdHeading; }
   }
   
   private PedometerConfiguration pedometer;
@@ -71,8 +71,8 @@ class SlacConfiguration
   
   class SensorConfiguration
   {
-    float kalmanFilterR;
-    float kalmanFilterQ;
+    double kalmanFilterR;
+    double kalmanFilterQ;
 
     int minMeasurements;
     
@@ -84,12 +84,12 @@ class SlacConfiguration
       minMeasurements = 30;
     }
     
-    public void setKalmanFilterR(float R) { this.kalmanFilterR = R; }
-    public void setKalmanFilterQ(float Q) { this.kalmanFilterQ = Q; }
-    public void setMinMeasurements(float min) { this.minMeasurements = min; }
+    public void setKalmanFilterR(double R) { this.kalmanFilterR = R; }
+    public void setKalmanFilterQ(double Q) { this.kalmanFilterQ = Q; }
+    public void setMinMeasurements(int min) { this.minMeasurements = min; }
     
-    public float getKalmanFilterR() { return this.kalmanFilterR; }
-    public float getKalmanFilterQ() { return this.kalmanFilterQ; }
+    public double getKalmanFilterR() { return this.kalmanFilterR; }
+    public double getKalmanFilterQ() { return this.kalmanFilterQ; }
     public int   getMinMeasurements() { return this.minMeasurements; }
    
   }

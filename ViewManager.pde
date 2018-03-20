@@ -220,7 +220,6 @@ class ViewManager {
   
   void updateDeviceRSSI() {
     synchronized (lock) {
-        println("update device rssi inside lock " + device.getName());
        if(MOVEMENT_POPUP.equals(activeScreen)) {
          println("Skipping RSSI update because of user movement");
        } else if (this.device != null) {

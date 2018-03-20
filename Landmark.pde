@@ -24,10 +24,15 @@ class Landmark
      return new Landmark(x, y, name, newCov);
   }
   
+  
+  public String getName() { return this.name; }
+  
   public double getX() { return this.x; }
   public double getY() { return this.y; }
-  public String getName() { return this.name; }
   public double[][] getCov() { return this.cov; }
   
+  public void setX(double x) { this.x = x; }
+  public void setY(double y) { this.y = y; }
+  public void setCov(double[][] cov) { this.cov = cov; }
 
 }

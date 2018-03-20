@@ -2,24 +2,23 @@
 
 class User
 {
-  PVector pos;
-  double theta;
+  double x, y, theta;
   
   SlacConfiguration config;
   
   
   User(SlacConfiguration config)
   {
-    pos.x = 0;
-    pos.y = 0;
+    x = 0;
+    y = 0;
     theta = 0;
     this.config = config;
   }
   
   User(SlacConfiguration config, double x, double y, double theta)
   {
-    pos.x = x;
-    pos.y = y;
+    this.x = x;
+    this.y = y;
     this.theta = theta;
     this.config = config;
   }
@@ -32,8 +31,8 @@ class User
    */
   public void move(double r, double theta)
   {
-    this.pos.x += r * Math.cos(theta);
-    this.pos.y += r * Math.sin(theta);
+    this.x += r * Math.cos(theta);
+    this.y += r * Math.sin(theta);
     this.theta  = theta;
   }
  
@@ -48,18 +47,19 @@ class User
     final double sampleHeading = MathUtil.limitTheta(MathUtil.randn(theta, this.config.getPedometer().getHeadingSD()));   
     final double sampledR = MathUtil.randn(r, this.config.getPedometer().getStepSD());
     
-    this.pos.x += sampledR * Math.cos(sampleHeading);
-    this.pos.y += sampledR * Math.sin(sampleHeading);
+    this.x += sampledR * Math.cos(sampleHeading);
+    this.y += sampledR * Math.sin(sampleHeading);
     
     this.theta = sampleHeading;
   }
    
   
-  PVector getPosition() { return this.pos; }
-  
+  double getPositionX() { return this.x; }
+  double getPositionY() { return this.y; }
+
   User getCopy()
   {
-    return new User(config, this.pos.x, this.pos.y, this.theta);
+    return new User(config, this.x, this.y, this.theta);
   }
   
 }

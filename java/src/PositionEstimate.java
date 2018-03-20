@@ -1,7 +1,7 @@
 class PositionEstimate {
-  public int estimate, x, y, varX, varY;
+  public double estimate, x, y, varX, varY;
   
-  public PositionEstimate(int estimate, int x, int y, int varX, int varY) {
+  public PositionEstimate(double estimate, double x, double y, double varX, double varY) {
     this.estimate = estimate;
     this.x = x;
     this.y = y;

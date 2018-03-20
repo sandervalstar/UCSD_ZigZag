@@ -1,8 +1,14 @@
 //import LandmarkParticleSet from './landmark-particle-set';
 //ported from https://github.com/wouterbulten/slacjs/blob/e21748e5c11f1eb6357dc528bc60a4645ff09e22/src/app/models/landmark-init-set.js
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 class LandmarkInitializationSet {
-  private int nParticles, stdRange, randomParticles, effectiveParticleThreshold, maxVariance;
+  private int nParticles, stdRange, randomParticles;
+  private double effectiveParticleThreshold, maxVariance;
   private Map<String, LandmarkParticleSet> particleSetMap;
   
   /**
@@ -14,13 +20,13 @@ class LandmarkInitializationSet {
    * @param  {Number} maxVariance
    * @return {LandmarkInitializationSet}
    */
-  public LandmarkInitializationSet constructor(SlacConfiguration slacConfig) {
+  public LandmarkInitializationSet(SlacConfiguration slacConfig) {
     this.nParticles = slacConfig.getParticles().getN();
     this.stdRange = slacConfig.getParticles().getSd();
     this.randomParticles = slacConfig.getParticles().getRandomN();
     this.maxVariance = slacConfig.getParticles().getMaxVariance();
 
-    if (effectiveParticleThreshold == null) {
+    if (this.effectiveParticleThreshold == 0) {
       this.effectiveParticleThreshold = nParticles / 1.5;
     }
     else {
@@ -37,9 +43,9 @@ class LandmarkInitializationSet {
    * @param {Number} y   Position of user
    * @param {Number} r   Range measurement
    */
-  public void addMeasurement(String uid, int x, int y, int r) {
+  public LandmarkInitializationSet addMeasurement(String uid, double x, double y, double r) {
     if (!this.has(uid)) {
-      this.particleSetMap.set(uid, new LandmarkParticleSet(
+      this.particleSetMap.put(uid, new LandmarkParticleSet(
         this.nParticles, this.stdRange, this.randomParticles, this.effectiveParticleThreshold, this.maxVariance
       ));
     }
@@ -55,7 +61,7 @@ class LandmarkInitializationSet {
    * @return {Boolean}
    */
   public boolean has(String uid) {
-    return this.particleSetMap.has(uid);
+    return this.particleSetMap.containsKey(uid);
   }
 
   /**
@@ -63,7 +69,7 @@ class LandmarkInitializationSet {
    * @param  {String} uid
    * @return {Object}
    */
-  public PositionEstimate estimate(uid) {
+  public PositionEstimate estimate(String uid) {
     return this.particleSetMap.get(uid).positionEstimate();
   }
 
@@ -72,8 +78,8 @@ class LandmarkInitializationSet {
    * @param  {String} uid
    * @return {void}
    */
-  public void remove(uid) {
-    this.particleSetMap.delete(uid);
+  public void remove(String uid) {
+    this.particleSetMap.remove(uid);
   }
 
   /**
@@ -81,6 +87,6 @@ class LandmarkInitializationSet {
    * @return {Array}
    */
   public List<LandmarkParticleSet> particleSets() {
-    return this.particleSetMap.values();
+    return new ArrayList(this.particleSetMap.values());
   }
 }

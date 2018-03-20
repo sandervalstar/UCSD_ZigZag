@@ -1,3 +1,5 @@
+import java.util.*;
+
 // Porting https://github.com/wouterbulten/slacjs/blob/e21748e5c11f1eb6357dc528bc60a4645ff09e22/src/app/models/particle-set.js
 class ParticleSet {
   
@@ -6,7 +8,7 @@ class ParticleSet {
   private List<Particle> particleList;
   private List<String> initialisedLandmarks;
   private LandmarkInitializationSet landmarkInitSet;
-  
+
   /**
    * Create a new particle set with a given number of particles
    * @param  {Number} nParticles Number of particles
@@ -33,9 +35,9 @@ class ParticleSet {
    * @param  {[type]} control [description]
    * @return {ParticleSet}
    */
-  public ParticleSet samplePose(control) {
+  public ParticleSet samplePose(double r, double theta) {
     for(int i = 0; i < this.particleList.size(); i++) {
-      this.particleList.get(i).samplePose(control);
+      this.particleList.get(i).samplePose(r, theta);
     }
 
     return this;
@@ -58,7 +60,7 @@ class ParticleSet {
       if (this.initialisedLandmarks.contains(uid)) {
 
         double uX = this.userEstimateX();
-        double uX = this.userEstimateY();
+        double uY = this.userEstimateY();
         
         this.landmarkInitSet.addMeasurement(uid, uX, uY, r);
 
@@ -68,7 +70,7 @@ class ParticleSet {
 
         if (pe.estimate > 0.6) {
           for(int i = 0; i < this.particleList.size(); i++) {
-            this.particleList.get(i).addLandmark(uid, r, name, moved, pe.x, pe.y, pe.varX, pe.varY);
+            this.particleList.get(i).addLandmark(uid, r, name, pe.x, pe.y, pe.varX, pe.varY);
           }
 
           this.landmarkInitSet.remove(uid);
@@ -77,7 +79,7 @@ class ParticleSet {
       }
       else {
         for(int i = 0; i < this.particleList.size(); i++) {
-          this.particleList.get(i).processObservation(String uid, double r, String name, boolean moved);
+          this.particleList.get(i).processObservation(uid, r);
         }
       }
     }
@@ -93,9 +95,9 @@ class ParticleSet {
    */
   public ParticleSet resample() {
   
-    Double weights = getWeightMappings(this.particleList);
+    List<Double> weights = getWeightMappings(this.particleList);
     if (numberOfEffectiveParticles(weights) < this.effectiveParticleThreshold) {
-      println('resampling');
+      System.out.println("resampling");
       Set<Integer> lowVarSampl = lowVarianceSampling(this.nParticles, weights);
       this.particleList = new ArrayList();
       for (Integer i : lowVarSampl) {
@@ -122,7 +124,7 @@ class ParticleSet {
     Particle best = this.particleList.get(0);
     
     for(Particle p : this.particleList) {
-      if (p.weigth > best.weight) {
+      if (p.weight > best.weight) {
         best = p;
       }
     }
@@ -134,48 +136,28 @@ class ParticleSet {
    * Compute an average of all landmark estimates
    * @return {Map}
    */
-  public Map<String, Landmark> landmarkEstimate() {
-    List<Double> weights = normalizeWeights(this.particleList.map((p) => p.weight));
+  public Map<String, LandmarkEstimate> landmarkEstimate() {
+    List<Double> weights = normalizeWeights(getWeightMappings(this.particleList));
 
-    Map<String, Landmark> landmarks = new HashMap();
+    Map<String, LandmarkEstimate> landmarks = new HashMap();
 
     //Loop through all particles to get an estimate of the landmarks
-    this.particleList.forEach((p, i) => {
-      p.landmarks.forEach((landmark, uid) => {
-        if (!landmarks.has(uid)) {
-          landmarks.set(uid, {
-            x: weights[i] * landmark.x,
-            y: weights[i] * landmark.y,
-            uid: uid,
-            name: landmark.name
-          });
-        }
-        else {
-          const l = landmarks.get(uid);
-
-          l.x += weights[i] * landmark.x;
-          l.y += weights[i] * landmark.y;
-        }
-      });
-    });
-    
-    
     for(int i = 0; i < this.particleList.size(); i++) {
       Particle p = this.particleList.get(i);
-      for(Map.Key<String, Landmark> e : p.getLandmarks()) {
+      for(Map.Entry<String, Landmark> e : p.getLandmarks().entrySet()) {
         Landmark landmark = e.getValue();
-        if(!landmarks.contains(e.getKey())) {
-          landmarks.put(e.getKey(), new Landmark(
+        if(!landmarks.containsKey(e.getKey())) {
+          landmarks.put(e.getKey(), new LandmarkEstimate(
             landmark.getX(),
             landmark.getY(),
-            uid,
-            landmark.getName(),
+            e.getKey(),
+            landmark.getName()
           ));
         } else {
-          Landmark l = landmarks.get(uid);
-          
-          l.setX(l.getX() + weights.get(i) * landmark.getX());
-          l.setY(l.getY() + weights.get(i) * landmark.getY());
+          LandmarkEstimate l = landmarks.get(e.getKey());
+
+          l.x = l.x + weights.get(i) * landmark.getX();
+          l.y = l.y + weights.get(i) * landmark.getY();
         }
       }
     }
@@ -190,7 +172,7 @@ class ParticleSet {
   private double userEstimateX() {
     double x = 0;
     for(Particle p : this.particleList) {
-      x += p.getWeight()*p.getUser().getX();
+      x += p.weight*p.user.x;
     }
     
     return x;
@@ -199,7 +181,7 @@ class ParticleSet {
   private double userEstimateY() {
     double y = 0;
     for(Particle p : this.particleList) {
-      y += p.getWeight()*p.getUser().getY();
+      y += p.weight*p.user.y;
     }
     
     return y;
@@ -210,7 +192,7 @@ class ParticleSet {
    * @param  {String} uid Landmark uid
    * @return {void}
    */
-  private void removeLandmark(uid) {
+  private void removeLandmark(String uid) {
 
     //Remove from the landmark list if it exists
     int index = this.initialisedLandmarks.indexOf(uid);
@@ -242,13 +224,13 @@ class ParticleSet {
   
   private List<Double> normalizeWeights(List<Double> weights) {
     double total = 0;
-    for(int i = 0; i < normalizedWeights.size(); i++) {
-      total += normalizedWeights.get(i);
+    for(int i = 0; i < weights.size(); i++) {
+      total += weights.get(i);
     }
     
     List<Double> result = weights;
-    for(int i = 0; i < normalizedWeights.size(); i++) {
-      result.get(i) = results.get(i) / total;
+    for(int i = 0; i < weights.size(); i++) {
+      result.set(i, result.get(i) / total);
     }
   
     return result;
@@ -257,7 +239,7 @@ class ParticleSet {
   public List<Double> getWeightMappings(List<Particle> particles) {
    List<Double> weights = new ArrayList<Double>();
    for (Particle particle : particles) {
-       weights.add(particle.getWeight());
+       weights.add(particle.weight);
    }
    return weights;
  }
@@ -266,11 +248,12 @@ class ParticleSet {
  * Samples a new set using a low variance sampler from a array of weights
  * @param {Number} nSamples Number of samples to sample
  * @param {Array} weights   Weight array
- * @return {Array} An array with indices corresponding to the selected weights
+ * @param nParticles
+  *@param weights @return {Array} An array with indices corresponding to the selected weights
  */
- public Set<Integer> lowVarianceSampling(nSamples, weights) {
+ public Set<Integer> lowVarianceSampling(int nParticles, List<Double> weights) {
 
-  int M = weights.length;
+  int M = weights.size();
   List<Double> normalizedWeights = normalizeWeights(weights);
 
   double rand = Math.random() * (1 / M);
@@ -280,7 +263,7 @@ class ParticleSet {
 
   Set<Integer> set = new HashSet();
 
-  for (int m = 1; m <= nSamples; m++) {
+  for (int m = 1; m <= nParticles; m++) {
     double U = rand + (m - 1) * (1 / M);
 
     while (U > c) {

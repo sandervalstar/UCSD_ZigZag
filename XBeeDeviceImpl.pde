@@ -25,6 +25,9 @@ class XBeeDeviceImpl implements XBeeDevice {
   }
   
   String getName() {
+    if (this.name == null || this.name.isEmpty()) {
+      return this.get64BitAddress(); 
+    }
     return this.name; 
   }
 }

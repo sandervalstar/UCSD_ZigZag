@@ -3,6 +3,8 @@
 class User
 {
   PVector pos;
+  double theta;
+  
   SlacConfiguration config;
   
   
@@ -10,41 +12,46 @@ class User
   {
     pos.x = 0;
     pos.y = 0;
+    theta = 0;
     this.config = config;
   }
   
-  User(SlacConfiguration config, float x, float y)
+  User(SlacConfiguration config, double x, double y, double theta)
   {
     pos.x = x;
     pos.y = y;
+    this.theta = theta;
     this.config = config;
   }
   
   
   /**
    * Move a user to a new position
-   * @param  {float} r
-   * @param  {float} theta
+   * @param  {double} r
+   * @param  {double} theta
    */
-  public void move(float r, float theta)
+  public void move(double r, double theta)
   {
-    this.pos.x += r * cos(theta);
-    this.pos.y += r * sin(theta);
+    this.pos.x += r * Math.cos(theta);
+    this.pos.y += r * Math.sin(theta);
+    this.theta  = theta;
   }
-  
-  
  
   /**
    * Move a user to a new position
-   * @param  {float} r
-   * @param  {float} theta
+   * @param  {double} x
+   * @param  {double} y
    */
-  public void samplePose(float r, float theta)
+  public void samplePose(double r, double theta)
   {
-    // todo
+
+    final double sampleHeading = MathUtil.limitTheta(MathUtil.randn(theta, this.config.getPedometer().getHeadingSD()));   
+    final double sampledR = MathUtil.randn(r, this.config.getPedometer().getStepSD());
     
-    this.pos.x += r * cos(theta);
-    this.pos.y += r * sin(theta);
+    this.pos.x += sampledR * Math.cos(sampleHeading);
+    this.pos.y += sampledR * Math.sin(sampleHeading);
+    
+    this.theta = sampleHeading;
   }
    
   
@@ -52,7 +59,7 @@ class User
   
   User getCopy()
   {
-    return new User(config, this.pos.x, this.pos.y);
+    return new User(config, this.pos.x, this.pos.y, this.theta);
   }
   
 }

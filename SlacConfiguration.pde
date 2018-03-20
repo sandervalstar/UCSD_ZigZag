@@ -57,8 +57,8 @@ class SlacConfiguration
   class SensorConfiguration
   {
     float kalmanFilterR;
-    float kalmanFitlerQ;
-    
+    float kalmanFilterQ;
+
     int minMeasurements;
     
     public SensorConfiguration()

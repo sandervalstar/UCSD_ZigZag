@@ -28,18 +28,25 @@ class SlacConfiguration
   }
   
   private ParticleConfiguration particles;
-  public ParticleConfiguration getParticles() return { this.particles; }
+  public ParticleConfiguration getParticles() { return this.particles; }
   
   // ======================= pedometer =============================================//
   
   class PedometerConfiguration
   {
     float stepSize; // in meters
+    float sdStep;   // standard deviation per step
     
-    public PedometerConfiguration() { stepSize = 0.6f; }
+    public PedometerConfiguration()
+    { 
+      stepSize = 0.6f;
+      sdStep   = 0.15f;
+    }
     
     public float getStepSize() { return this.stepSize; }
-    public void setSetpSize(float stepSize) { this.setpSize = stepSize; }
+    public float getStepSD() { return this.sdStep; }
+    public void setStepSize(float stepSize) { this.stepSize = stepSize; }
+    public void setStepSD(float sdStep) { this.sdStep = sdStep; }
   }
   
   private PedometerConfiguration pedometer;

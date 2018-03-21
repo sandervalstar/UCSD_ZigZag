@@ -216,7 +216,7 @@ class ViewManager {
          //println("udpating "+device.getRSSI());    
 
           this.device = this.device.getNewRSSI();
-          this.locationEstimator.addMeasurement("device1", this.device.getCurrentRSSI(), "device1");
+          this.locationEstimator.addMeasurement("device1", -this.device.getCurrentRSSI(), "device1");
        }
     }
   }   

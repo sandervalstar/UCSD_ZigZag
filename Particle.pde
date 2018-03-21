@@ -95,6 +95,7 @@ class Particle {
     cov[1][0] = 0;
     cov[1][1] = varY;
     
+    println("adding landmark for uid: "+uid);
     Landmark landmark = new Landmark(x, y, name, cov);
     this.landmarks.put(uid, landmark);
   }
@@ -120,60 +121,65 @@ class Particle {
 
     // Find the correct EKF
     final Landmark l = this.landmarks.get(uid);
-
-    //Compute the difference between the predicted user position of this
-    //particle and the predicted position of the landmark.
-    final double dx = this.user.x - l.getX();
-    final double dy = this.user.y - l.getY();
-
-    //@todo find better values for default covariance
-    final double errorCov = MathUtil.randn(2, 0.1);
-
-    final double dist = Math.max(0.001, Math.sqrt((dx * dx) + (dy * dy)));
-
-    //Compute innovation: difference between the observation and the predicted value
-    final double v = r - dist;
-
-    //Compute Jacobian
-    final double[] H = new double[]{-dx / dist, -dy / dist};
-
-    //Compute covariance of the innovation
-    //covV = H * Cov_s * H^T + error
-    
-    double[][] lcov = l.getCov();
-    final double[] HxCov = new double[] {lcov[0][0] * H[0] + lcov[0][1] * H[1],
-                                         lcov[1][0] * H[0] + lcov[1][1] * H[1]};
-    final double covV = (HxCov[0] * H[0]) + (HxCov[1] * H[1]) + errorCov;
-
-    //Kalman gain
-    final double[] K = new double[]{HxCov[0] * (1 / covV), HxCov[1] * (1.0 / covV)};
-
-    //Calculate the new position of the landmark
-    final double newX = l.getX() + (K[0] * v);
-    final double newY = l.getY() + (K[1] * v);
-
-    //Calculate the new covariance
-    //cov_t = cov_t-1 - K * covV * K^T
-    double[][] updateCov = new double[2][2];
-    updateCov[0][0] = K[0] * K[0] * covV;
-    updateCov[0][1] = K[0] * K[1] * covV;
-    updateCov[1][0] = K[1] * K[0] * covV;
-    updateCov[1][1] = K[1] * K[1] * covV;
-
-    double[][] newCov = new double[2][2];
-    newCov[0][0] = lcov[0][0] - updateCov[0][0];
-    newCov[0][1] = lcov[0][1] - updateCov[0][1];
-    newCov[1][0] = lcov[1][0] - updateCov[1][0];
-    newCov[1][1] = lcov[1][1] - updateCov[1][1];
-
-    //Update the weight of the particle
-    //this.weight = this.weight - (v * (1.0 / covV) * v);
-    this.weight = this.weight * MathUtil.pdfn(r, dist, covV);
-
-    //Update particle
-    l.setX(newX);
-    l.setY(newY);
-    l.setCov(newCov);
+    if(l != null) {
+      println("user: "+user+" l: "+l);  
+  
+      //Compute the difference between the predicted user position of this
+      //particle and the predicted position of the landmark.
+      final double dx = this.user.x - l.getX();
+      final double dy = this.user.y - l.getY();
+  
+      //@todo find better values for default covariance
+      final double errorCov = MathUtil.randn(2, 0.1);
+  
+      final double dist = Math.max(0.001, Math.sqrt((dx * dx) + (dy * dy)));
+  
+      //Compute innovation: difference between the observation and the predicted value
+      final double v = r - dist;
+  
+      //Compute Jacobian
+      final double[] H = new double[]{-dx / dist, -dy / dist};
+  
+      //Compute covariance of the innovation
+      //covV = H * Cov_s * H^T + error
+      
+      double[][] lcov = l.getCov();
+      final double[] HxCov = new double[] {lcov[0][0] * H[0] + lcov[0][1] * H[1],
+                                           lcov[1][0] * H[0] + lcov[1][1] * H[1]};
+      final double covV = (HxCov[0] * H[0]) + (HxCov[1] * H[1]) + errorCov;
+  
+      //Kalman gain
+      final double[] K = new double[]{HxCov[0] * (1 / covV), HxCov[1] * (1.0 / covV)};
+  
+      //Calculate the new position of the landmark
+      final double newX = l.getX() + (K[0] * v);
+      final double newY = l.getY() + (K[1] * v);
+  
+      //Calculate the new covariance
+      //cov_t = cov_t-1 - K * covV * K^T
+      double[][] updateCov = new double[2][2];
+      updateCov[0][0] = K[0] * K[0] * covV;
+      updateCov[0][1] = K[0] * K[1] * covV;
+      updateCov[1][0] = K[1] * K[0] * covV;
+      updateCov[1][1] = K[1] * K[1] * covV;
+  
+      double[][] newCov = new double[2][2];
+      newCov[0][0] = lcov[0][0] - updateCov[0][0];
+      newCov[0][1] = lcov[0][1] - updateCov[0][1];
+      newCov[1][0] = lcov[1][0] - updateCov[1][0];
+      newCov[1][1] = lcov[1][1] - updateCov[1][1];
+  
+      //Update the weight of the particle
+      //this.weight = this.weight - (v * (1.0 / covV) * v);
+      this.weight = this.weight * MathUtil.pdfn(r, dist, covV);
+  
+      //Update particle
+      l.setX(newX);
+      l.setY(newY);
+      l.setCov(newCov);
+    } else {
+      println("landmark is null for uid: "+uid);
+    }
   }
 
   /**

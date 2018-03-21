@@ -40,6 +40,7 @@ class LocationEstimatorImpl implements LocationEstimator
 
     if (landmarks.containsKey(uid))
     {
+      println("found device "+uid);
       //if (this.hasMoved(uid, name))
       //{
       //  this.moveLandmark(uid, rssi, name);
@@ -48,6 +49,7 @@ class LocationEstimatorImpl implements LocationEstimator
         this.updateLandmark(uid, rssi);
       //}
     } else {
+      println("register new device "+uid);
       this.registerLandmark(uid, rssi, name);
     }
     
@@ -157,6 +159,7 @@ class LocationEstimatorImpl implements LocationEstimator
       
       for (ObservedLandmark landmark : observations)
       {
+        println("process obsertvation for "+landmark.getUid());
         this.particleSet.processObservation(landmark.getUid(), landmark.getRadius(), landmark.getName(), landmark.getMoved()); 
       }
       

@@ -54,10 +54,10 @@ class ParticleSet
    */
   public ParticleSet processObservation(String uid, double r, String name, boolean moved)
   {
+    println("particleSet processObservation");
 
     if (uid != null)
     {
-
       //If the landmark has moved we remove it from all particles
       if (moved)
       {
@@ -65,8 +65,9 @@ class ParticleSet
         this.removeLandmark(uid);
       }
 
-      if (this.initialisedLandmarks.contains(uid))
+      if (!this.initialisedLandmarks.contains(uid))
       {
+        println("particleSet initialisedLandmarks.contains(uid)");
 
         double uX = this.userEstimateX();
         double uY = this.userEstimateY();
@@ -76,7 +77,6 @@ class ParticleSet
         PositionEstimate pe = this.landmarkInitSet.estimate(uid);
         
         //const {estimate, x, y, varX, varY} = this.landmarkInitSet.estimate(uid);
-
         if (pe.estimate > 0.6)
         {
           for (int i = 0; i < this.particleList.size(); i++)

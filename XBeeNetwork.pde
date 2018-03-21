@@ -1,6 +1,6 @@
 import java.util.List;
 
 interface XBeeNetwork {
-   int getPanId();
-   List<XBeeDevice> getAllDevicesInNetwork(); 
+ int getPanId();
+ List<XBeeDevice> getAllDevicesInNetwork(); 
 }

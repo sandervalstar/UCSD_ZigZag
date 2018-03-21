@@ -25,8 +25,8 @@ class ViewManager {
   private String nextMove = "";
   final String L = "left";
   final String R = "right";
-  final String U = "up";
-  final String D = "down";
+  final String U = "forward";
+  final String D = "backward";
   
   final String HOME = "HOME";
   final String NETWORK = "NETWORK";
@@ -36,14 +36,16 @@ class ViewManager {
       
   public ViewManager(PApplet app) {
     this.app = app;
-    //this.showHomeScreen();
-    this.showLocatorScreen(device);
+    this.showHomeScreen();
+    //this.showLocatorScreen(device);
     
     if(USE_MOCKS) {
       this.locationEstimator = new LocationEstimatorMock();
       this.device = new XBeeDeviceMock();
     } else {
       //TODO: use real impl
+      this.locationEstimator = new LocationEstimatorMock();
+      this.device = new XBeeDeviceMock();
     }
   };
   
@@ -51,18 +53,20 @@ class ViewManager {
     fill(color(255,255,255));
     if(LOCATOR.equals(activeScreen) || MOVEMENT_POPUP.equals(activeScreen)) {
       synchronized(lock) {
-        background(0);
-        this.drawPageTitle(device.get16BitAddress());
-        textAlign(LEFT,BOTTOM);
-        //text(this.device.getRSSI(), 100, 100);
-        fill(color(255,0,0));
-        ellipse(width/2, (height-2*DRAW_MARGIN)/2+DRAW_MARGIN, 10, 10);
-        fill(color(255,255,255));
-        List<Point2D.Float> locations = this.locationEstimator.getProbableLocations();
-        drawProbableLocations(locations);
-        drawMovementButtons();
-        if(MOVEMENT_POPUP.equals(activeScreen)) {
-          drawMovementPopup();
+        if (device != null) {
+          background(0);
+          this.drawPageTitle(device.getName());
+          textAlign(LEFT,BOTTOM);
+          //text(this.device.getRSSI(), 100, 100);
+          fill(color(255,0,0));
+          ellipse(width/2, (height-2*DRAW_MARGIN)/2+DRAW_MARGIN, 10, 10);
+          fill(color(255,255,255));
+          List<Point2D.Float> locations = this.locationEstimator.getProbableLocations();
+          drawProbableLocations(locations);
+          drawMovementButtons();
+          if(MOVEMENT_POPUP.equals(activeScreen)) {
+            drawMovementPopup();
+          }
         }
       }
     }
@@ -128,8 +132,8 @@ class ViewManager {
     if(USE_MOCKS) {
        network = new XBeeNetworkMock(panId);
     } else {
-      //TODO: use real impl
-      network = null;
+      Antenna antenna = new AntennaImpl();
+      network = new XBeeNetworkImpl(panId, antenna);
     }
     
     this.devices = network.getAllDevicesInNetwork();
@@ -137,6 +141,7 @@ class ViewManager {
   }
   
   private void showLocatorScreen(XBeeDevice device) {
+    println("show locator screen " + device.getName());
     this.activeScreen = LOCATOR;
     this.clearScreen();
     this.device = device;
@@ -145,6 +150,7 @@ class ViewManager {
       this.locationEstimator = new LocationEstimatorMock();
     } else {
       //TODO: use real impl
+      this.locationEstimator = new LocationEstimatorMock();
     }
     this.startMeasurements();
   }
@@ -153,7 +159,7 @@ class ViewManager {
     for(int i = 0; i < this.devices.size(); i++) {
       XBeeDevice d = devices.get(i);
       textAlign(LEFT,TOP);
-      text(d.get16BitAddress(), 3*MARGIN, 100 + i*MARGIN2);
+      text(d.getName(), 3*MARGIN, 100 + i*MARGIN2);
     }
   }
   
@@ -186,7 +192,7 @@ class ViewManager {
         this.showLocatorScreen(devices.get(deviceIndex));
         
       }        
-      println("mouse presseed " + mouseY + ", index: "+deviceIndex);
+      println("mouse presseed " + mouseY + ", index: "+deviceIndex + " " + device.getName());
     } else if (LOCATOR.equals(activeScreen)) {
       if(height-LINE_MARGIN < mouseY && mouseY < height) {
         if(0 <= mouseX && mouseX < width/4) {
@@ -218,8 +224,9 @@ class ViewManager {
          println("Skipping RSSI update because of user movement");
        } else if (this.device != null) {
          //println("udpating "+device.getRSSI());    
-         this.device = this.device.updateRSSI();
-         this.locationEstimator.addMeasurement("device1", this.device.getRSSI(), "device1");
+
+          this.device = this.device.getNewRSSI();
+          this.locationEstimator.addMeasurement("device1", this.device.getCurrentRSSI(), "device1");
        }
     }
   }   

@@ -9,6 +9,8 @@ class LocationEstimatorImpl implements LocationEstimator
   Map<String, MyLandmark> landmarks = new HashMap<String, MyLandmark>();
   ParticleSet particleSet;
   
+  Point2D.Float bestWeightParticle; // Todo, turn this into a list when we support more devices
+  
   int iteration;
   
   float userX, userY;
@@ -22,6 +24,7 @@ class LocationEstimatorImpl implements LocationEstimator
     this.particleSet = new ParticleSet (config.getParticles().getN(),
                                         config.getParticles().getEffectiveParticleThreshold(),
                                         config);
+    this.bestWeightParticle = new Point2D.Float(0, 0);
   }
   
   // ====================== Sensor related =========================== //
@@ -121,12 +124,10 @@ class LocationEstimatorImpl implements LocationEstimator
   
   double rssiToDistance(double rssi)
   {
-    return rssi; // TODO
+    return this.config.getRSSI().getD0() * Math.pow(10, (rssi - this.config.getRSSI().getTxPower()) / (-10 * this.config.getRSSI().getN()));
   }
   
-  // ======================================================================================= //
-  
-  
+  // ======================================================================================= //  
   // ====================== User movement related =========================== //
   // our algorithm only updates landmarks when the user moves
   
@@ -135,7 +136,6 @@ class LocationEstimatorImpl implements LocationEstimator
   void addUserMovement(float x, float y)
   {
       print("Slac running iteration " + ++iteration);
-      
       
       double distX = x - userX;
       double distY = y - userY;
@@ -156,6 +156,21 @@ class LocationEstimatorImpl implements LocationEstimator
       }
       
       this.particleSet.resample();
+      
+      this.locations = new ArrayList();
+      
+      bestWeightParticle = new Point2D.Float(0, 0);
+      double bestWeight = Double.NEGATIVE_INFINITY;
+      for (Particle particle : this.particleSet.particles())
+      {
+        Point2D.Float point = new Point2D.Float((float) particle.getUser().getPositionX(), (float) particle.getUser().getPositionY());
+        locations.add(point);
+        if (bestWeight < particle.getWeight())
+        {
+          bestWeight = particle.getWeight();
+          bestWeightParticle = point;
+        }
+      }
   }
   
   
@@ -168,11 +183,7 @@ class LocationEstimatorImpl implements LocationEstimator
   
   Point2D.Float getEstimatedLocation()
   {
-    if (this.locations.size() > 0)
-    {
-      return this.locations.get(0); 
-    }
-    return null;
+    return bestWeightParticle;
   }
   
   

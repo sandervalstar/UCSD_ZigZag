@@ -25,8 +25,8 @@ class ViewManager {
   private String nextMove = "";
   final String L = "left";
   final String R = "right";
-  final String U = "up";
-  final String D = "down";
+  final String U = "forward";
+  final String D = "backward";
   
   final String HOME = "HOME";
   final String NETWORK = "NETWORK";

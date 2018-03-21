@@ -39,14 +39,8 @@ class ViewManager {
     this.showHomeScreen();
     //this.showLocatorScreen(device);
     
-    if(USE_MOCKS) {
-      this.locationEstimator = new LocationEstimatorMock();
-      this.device = new XBeeDeviceMock();
-    } else {
-      //TODO: use real impl
-      this.locationEstimator = new LocationEstimatorMock();
-      this.device = new XBeeDeviceMock();
-    }
+    this.locationEstimator = new LocationEstimatorImpl(new SlacConfiguration());
+    this.device = new XBeeDeviceMock();
   };
   
   public void draw() {
@@ -62,7 +56,7 @@ class ViewManager {
           ellipse(width/2, (height-2*DRAW_MARGIN)/2+DRAW_MARGIN, 10, 10);
           fill(color(255,255,255));
           List<Point2D.Float> locations = this.locationEstimator.getProbableLocations();
-          drawProbableLocations(locations);
+          drawProbableLocations(locations, this.locationEstimator.getEstimatedLocation());
           drawMovementButtons();
           if(MOVEMENT_POPUP.equals(activeScreen)) {
             drawMovementPopup();
@@ -146,12 +140,8 @@ class ViewManager {
     this.clearScreen();
     this.device = device;
     
-    if(USE_MOCKS) {
-      this.locationEstimator = new LocationEstimatorMock();
-    } else {
-      //TODO: use real impl
-      this.locationEstimator = new LocationEstimatorMock();
-    }
+    this.locationEstimator = new LocationEstimatorImpl(new SlacConfiguration());
+    
     this.startMeasurements();
   }
   
@@ -253,9 +243,9 @@ class ViewManager {
   
   void stopMeasurements() {
     
-  } 
+  }
   
-  private void drawProbableLocations(List<Point2D.Float> locations) {
+  private void drawProbableLocations(List<Point2D.Float> locations, Point2D.Float estimatedLocation) {
     float max = Float.MIN_VALUE;
     float min = Float.MAX_VALUE;
     float sum = 0f;
@@ -284,6 +274,34 @@ class ViewManager {
         5, 5);
     }
     
+    if(locations.size() > 0) {
+     //draw estimate location
+      fill(color(0,255,0));
+        ellipse(
+      scalePointCoordinate(estimatedLocation.x, min, max, 0, width), 
+      scalePointCoordinate(-estimatedLocation.y, min, max, DRAW_MARGIN, height-DRAW_MARGIN),
+      9, 9);
+      //draw indicators of 1m distance
+      fill(color(0,0,255));
+        ellipse(
+      scalePointCoordinate(1, min, max, 0, width), 
+      scalePointCoordinate(0, min, max, DRAW_MARGIN, height-DRAW_MARGIN),
+      5, 5);
+        ellipse(
+      scalePointCoordinate(-1, min, max, 0, width), 
+      scalePointCoordinate(0, min, max, DRAW_MARGIN, height-DRAW_MARGIN),
+      5, 5);
+        ellipse(
+      scalePointCoordinate(0, min, max, 0, width), 
+      scalePointCoordinate(1, min, max, DRAW_MARGIN, height-DRAW_MARGIN),
+      5, 5);
+        ellipse(
+      scalePointCoordinate(0, min, max, 0, width), 
+      scalePointCoordinate(-1, min, max, DRAW_MARGIN, height-DRAW_MARGIN),
+      5, 5);
+      fill(color(255,255,255)); 
+      fill(color(255,255,255)); 
+    }
     ////draw the axis
     //fill(0,255,0);
     ////print("min: "+min+" max "+max);

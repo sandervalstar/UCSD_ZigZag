@@ -7,12 +7,24 @@ class LocationEstimatorImpl implements LocationEstimator
   
   SlacConfiguration config;
   Map<String, MyLandmark> landmarks = new HashMap<String, MyLandmark>();
+  ParticleSet particleSet;
+  
   int iteration;
+  
+  float userX, userY;
   
   public LocationEstimatorImpl(SlacConfiguration config)
   {
     this.config = config;
+    this.userX = 0;
+    this.userY = 0;
+    this.iteration = 0;
+    this.particleSet = new ParticleSet (config.getParticles().getN(),
+                                        config.getParticles().getEffectiveParticleThreshold(),
+                                        config);
   }
+  
+  // ====================== Sensor related =========================== //
   
   public void addMeasurement(String uid, float rssi, String name)
   {
@@ -22,8 +34,9 @@ class LocationEstimatorImpl implements LocationEstimator
 
     if (landmarks.containsKey(uid))
     {
-      // if (this._hasMoved(uid, name)) {
-      //  this._moveLandmark(uid, rssi, name);
+      //if (this.hasMoved(uid, name))
+      //{
+      //  this.moveLandmark(uid, rssi, name);
       //}
       //else {
         this.updateLandmark(uid, rssi);
@@ -108,21 +121,45 @@ class LocationEstimatorImpl implements LocationEstimator
   
   double rssiToDistance(double rssi)
   {
-    return rssi;
+    return rssi; // TODO
   }
   
+  // ======================================================================================= //
+  
+  
+  // ====================== User movement related =========================== //
+  // our algorithm only updates landmarks when the user moves
+  
+  // todo: double check that when this method is called, when won't have any rssi
+  // info from the recently moved location
   void addUserMovement(float x, float y)
   {
-    for (int i = 0; i < locations.size(); i++)
-    {
-      //print("from x="+locations.get(i).x);
-      locations.get(i).x -= x;
-      //println(" to x="+locations.get(i).x);
-      //print("from y="+locations.get(i).y);
-      locations.get(i).y -= y;
-      //println(" to y="+locations.get(i).y);
-    }
+      print("Slac running iteration " + ++iteration);
+      
+      
+      double distX = x - userX;
+      double distY = y - userY;
+      
+      // find distance and heading
+      double dist = Math.sqrt(Math.pow(x - userX, 2) + Math.pow(y - userY, 2));
+      double heading = Math.atan(distY / distX);
+      
+      // sample a new pose for each particle in the set
+      this.particleSet.samplePose(dist, heading);
+      
+      // let each particle process the observations
+      List<ObservedLandmark> observations = this.getObservations();
+      
+      for (ObservedLandmark landmark : observations)
+      {
+        this.particleSet.processObservation(landmark.getUid(), landmark.getRadius(), landmark.getName(), landmark.getMoved()); 
+      }
+      
+      this.particleSet.resample();
   }
+  
+  
+  // ======================================================================================= //
   
   List<Point2D.Float> getProbableLocations()
   {
@@ -138,9 +175,5 @@ class LocationEstimatorImpl implements LocationEstimator
     return null;
   }
   
-  void update()
-  {
-    
-  }
   
 }

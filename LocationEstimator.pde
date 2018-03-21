@@ -45,6 +45,4 @@ interface LocationEstimator {
   public List<Point2D.Float> getProbableLocations();
   public Point2D.Float getEstimatedLocation();
   
-  // update probable locations with recent measurements
-  public void update();
 }

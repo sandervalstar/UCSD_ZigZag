@@ -276,6 +276,9 @@ class ViewManager {
       min = -max;
     }
     
+    
+  println("min "+min+" max "+max + " userlocation: "+userLocation.x +", "+userLocation.y);
+    
     for(Point2D.Float p : locations) {
             //println("drawing point ("+p.x+", "+p.y+")");
       ellipse(

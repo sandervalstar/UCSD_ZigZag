@@ -12,7 +12,7 @@ class XBeeDeviceImpl implements XBeeDevice {
   }
   
   public float getCurrentRSSI() {
-    return this.rssi; 
+    return this.rssi  * -1; 
   }
   
   public XBeeDevice getNewRSSI() {

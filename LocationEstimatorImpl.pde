@@ -33,7 +33,10 @@ class LocationEstimatorImpl implements LocationEstimator
   {
 
     if (rssi > 0)
-        return;
+    {
+      print("Ignoring positive RSSI" + rssi); 
+      return;
+    }
 
     if (landmarks.containsKey(uid))
     {
@@ -47,6 +50,8 @@ class LocationEstimatorImpl implements LocationEstimator
     } else {
       this.registerLandmark(uid, rssi, name);
     }
+    
+    print("Received signal strength " + rssi + " with estimated distance of " + rssiToDistance(rssi));
     
   }
   

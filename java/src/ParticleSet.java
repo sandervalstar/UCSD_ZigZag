@@ -1,7 +1,8 @@
 import java.util.*;
 
 // Porting https://github.com/wouterbulten/slacjs/blob/e21748e5c11f1eb6357dc528bc60a4645ff09e22/src/app/models/particle-set.js
-class ParticleSet {
+class ParticleSet
+{
   
   private int nParticles;  
   private int effectiveParticleThreshold;
@@ -9,24 +10,27 @@ class ParticleSet {
   private List<String> initialisedLandmarks;
   private LandmarkInitializationSet landmarkInitSet;
 
+  public LandmarkInitializationSet getLandmarkInitSet() { return landmarkInitSet; }
+
   /**
    * Create a new particle set with a given number of particles
    * @param  {Number} nParticles Number of particles
-   * @param  {Object} userConfig Config of the user
-   * @param  {Object} initConfig Config for the init filter
+   * @param  {SlacConfig} Algorithm configuration
    * @return {ParticleSet}
    */
-  public ParticleSet(int nParticles, int effectiveParticleThreshold, SlacConfiguration userConfig, SlacConfiguration initConfig) {
+  public ParticleSet(int nParticles, int effectiveParticleThreshold, SlacConfiguration slacConfig)
+  {
     this.nParticles = nParticles;
     this.effectiveParticleThreshold = effectiveParticleThreshold;
     this.particleList = new ArrayList();
 
     //Internal list to keep track of initialised landmarks
     this.initialisedLandmarks = new ArrayList();
-    this.landmarkInitSet = new LandmarkInitializationSet(initConfig);
+    this.landmarkInitSet = new LandmarkInitializationSet(slacConfig);
 
-    for (int i = 0; i < nParticles; i++) {
-      this.particleList.add(new Particle(userConfig));
+    for (int i = 0; i < nParticles; i++)
+    {
+      this.particleList.add(new Particle(slacConfig));
     }
   }
 
@@ -35,8 +39,10 @@ class ParticleSet {
    * @param  {[type]} control [description]
    * @return {ParticleSet}
    */
-  public ParticleSet samplePose(double r, double theta) {
-    for(int i = 0; i < this.particleList.size(); i++) {
+  public ParticleSet samplePose(double r, double theta)
+  {
+    for (int i = 0; i < this.particleList.size(); i++)
+    {
       this.particleList.get(i).samplePose(r, theta);
     }
 
@@ -48,16 +54,22 @@ class ParticleSet {
    * @param  {object} obs
    * @return {ParticleSet}
    */
-  public ParticleSet processObservation(String uid, double r, String name, boolean moved) {
+  public ParticleSet processObservation(String uid, double r, String name, boolean moved)
+  {
+    println("particleSet processObservation");
 
-    if (uid != null) {
-
+    if (uid != null)
+    {
       //If the landmark has moved we remove it from all particles
-      if (moved) {
+      if (moved)
+      {
+        println("Moving landmark " + uid);
         this.removeLandmark(uid);
       }
 
-      if (this.initialisedLandmarks.contains(uid)) {
+      if (!this.initialisedLandmarks.contains(uid))
+      {
+        println("particleSet !initialisedLandmarks.contains(uid)");
 
         double uX = this.userEstimateX();
         double uY = this.userEstimateY();
@@ -67,12 +79,11 @@ class ParticleSet {
         PositionEstimate pe = this.landmarkInitSet.estimate(uid);
         
         //const {estimate, x, y, varX, varY} = this.landmarkInitSet.estimate(uid);
-
-        if (pe.estimate > 0.6) {
-          for(int i = 0; i < this.particleList.size(); i++) {
-            // This used to be
-            // this.particleList.get(i).addLandmark(uid, r, name, moved, pe.x, pe.y, pe.varX, pe.varY);
-            // TODO: Find out why "moved" is missing!!!!
+        if (pe.estimate > 0.6)
+        {
+          for (int i = 0; i < this.particleList.size(); i++)
+          {
+            println("particleSet addLandmark(uid)");
             this.particleList.get(i).addLandmark(uid, r, name, pe.x, pe.y, pe.varX, pe.varY);
           }
 
@@ -80,11 +91,10 @@ class ParticleSet {
           this.initialisedLandmarks.add(uid);
         }
       }
-      else {
-        for(int i = 0; i < this.particleList.size(); i++) {
-          // This used to be
-          //  this.particleList.get(i).processObservation(String uid, double r, String name, boolean moved);
-          // TODO: Find out WHY "moved" is missing!!!!
+      else
+      {
+        for(int i = 0; i < this.particleList.size(); i++)
+        {
           this.particleList.get(i).processObservation(uid, r);
         }
       }
@@ -99,14 +109,17 @@ class ParticleSet {
    * Uses a low variance sample
    * @return {ParticleSet}
    */
-  public ParticleSet resample() {
+  public ParticleSet resample()
+  {
   
     List<Double> weights = getWeightMappings(this.particleList);
-    if (numberOfEffectiveParticles(weights) < this.effectiveParticleThreshold) {
+    if (numberOfEffectiveParticles(weights) < this.effectiveParticleThreshold) 
+    {
       System.out.println("resampling");
       Set<Integer> lowVarSampl = lowVarianceSampling(this.nParticles, weights);
       this.particleList = new ArrayList();
-      for (Integer i : lowVarSampl) {
+      for (Integer i : lowVarSampl) 
+      {
         this.particleList.add(new Particle(this.particleList.get(i)));
       } 
     }
@@ -118,7 +131,8 @@ class ParticleSet {
    * Get particles
    * @return {[Array]
    */
-  public List<Particle> particles() {
+  public List<Particle> particles()
+  {
     return this.particleList;
   }
 
@@ -126,11 +140,14 @@ class ParticleSet {
    * Return the particle with the heighest weight
    * @return {Particle}
    */
-  public Particle bestParticle() {
+  public Particle bestParticle()
+  {
     Particle best = this.particleList.get(0);
     
-    for(Particle p : this.particleList) {
-      if (p.getWeight() > best.getWeight()) {
+    for (Particle p : this.particleList)
+    {
+      if (p.getWeight() > best.getWeight())
+      {
         best = p;
       }
     }
@@ -142,7 +159,8 @@ class ParticleSet {
    * Compute an average of all landmark estimates
    * @return {Map}
    */
-  public Map<String, LandmarkEstimate> landmarkEstimate() {
+  public Map<String, LandmarkEstimate> landmarkEstimate()
+  {
     List<Double> weights = normalizeWeights(getWeightMappings(this.particleList));
 
     Map<String, LandmarkEstimate> landmarks = new HashMap();

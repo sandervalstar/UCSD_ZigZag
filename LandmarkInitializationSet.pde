@@ -11,6 +11,8 @@ class LandmarkInitializationSet {
   private double effectiveParticleThreshold, maxVariance;
   private Map<String, LandmarkParticleSet> particleSetMap;
   
+  public Map<String, LandmarkParticleSet> getParticleSetMap() { return particleSetMap; }
+  
   /**
    * Set containing multiple particle sets for initalisation of landmarks
    * @param  {Number} nParticles                 Number of particles in each set

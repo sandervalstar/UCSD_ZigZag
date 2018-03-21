@@ -3,13 +3,13 @@ import java.util.*;
 
 class LocationEstimatorImpl implements LocationEstimator
 {
-  List<Point2D.Float> locations = new ArrayList();
+  List<Point2D.Float> locations = new ArrayList(), bestWeightParticleLandmarks = new ArrayList();
   
   SlacConfiguration config;
   Map<String, MyLandmark> landmarks = new HashMap<String, MyLandmark>();
   ParticleSet particleSet;
   
-  Point2D.Float bestWeightParticle; // Todo, turn this into a list when we support more devices
+  Point2D.Float bestWeightUser; // Todo, turn this into a list when we support more devices
   
   int iteration;
   
@@ -24,7 +24,7 @@ class LocationEstimatorImpl implements LocationEstimator
     this.particleSet = new ParticleSet (config.getParticles().getN(),
                                         config.getParticles().getEffectiveParticleThreshold(),
                                         config);
-    this.bestWeightParticle = new Point2D.Float(0, 0);
+    this.bestWeightUser     = new Point2D.Float(0, 0);
   }
   
   // ====================== Sensor related =========================== //
@@ -34,7 +34,7 @@ class LocationEstimatorImpl implements LocationEstimator
 
     if (rssi > 0)
     {
-      print("Ignoring positive RSSI" + rssi); 
+      println("Ignoring positive RSSI" + rssi); 
       return;
     }
 
@@ -53,7 +53,7 @@ class LocationEstimatorImpl implements LocationEstimator
       this.registerLandmark(uid, rssi, name);
     }
     
-    print("Received signal strength " + rssi + " with estimated distance of " + rssiToDistance(rssi));
+    println("Received signal strength " + rssi + " with estimated distance of " + rssiToDistance(rssi));
     
   }
   
@@ -74,7 +74,7 @@ class LocationEstimatorImpl implements LocationEstimator
   {
     if (!moved)
     {
-      print("New landmark found with name " + name);
+      println("New landmark found with name " + name);
     }
     
     KalmanFilter filter = new KalmanFilter((float) config.getSensor().getKalmanFilterR(), 
@@ -98,7 +98,7 @@ class LocationEstimatorImpl implements LocationEstimator
       
       return false;
     } else {
-      print("hasMoved could not find landmark " + uid);
+      println("hasMoved could not find landmark " + uid);
       return false;
     }
     
@@ -142,7 +142,7 @@ class LocationEstimatorImpl implements LocationEstimator
   // info from the recently moved location
   void addUserMovement(float x, float y)
   {
-      print("Slac running iteration " + ++iteration);
+      println("Slac running iteration " + ++iteration);
       
       double distX = x;
       double distY = y;
@@ -165,21 +165,48 @@ class LocationEstimatorImpl implements LocationEstimator
       
       this.particleSet.resample();
       
-      this.locations = new ArrayList();
-      
-      bestWeightParticle = new Point2D.Float(0, 0);
+      // finds the best particle of the set to estimate landmarks and user location
       double bestWeight = Double.NEGATIVE_INFINITY;
+      Particle bestWeightParticle = null;      
+      
       for (Particle particle : this.particleSet.particles())
       {
-        Point2D.Float point = new Point2D.Float((float) particle.getUser().getPositionX(), (float) particle.getUser().getPositionY());
-        locations.add(point);
         if (bestWeight < particle.getWeight())
         {
+          bestWeightParticle = particle;
           bestWeight = particle.getWeight();
-          bestWeightParticle = point;
         }
       }
       
+      if (bestWeightParticle != null)
+      {
+        bestWeightParticleLandmarks = new ArrayList();
+        
+        // finds user location based on best particle 
+        bestWeightUser = new Point2D.Float((float) bestWeightParticle.getUser().getPositionX(), (float) bestWeightParticle.getUser().getPositionY());
+        
+        // finds landmarks based on best particle
+        for (Map.Entry<String, Landmark> it : bestWeightParticle.getLandmarks().entrySet())
+        {
+          Landmark landmark = it.getValue();
+          bestWeightParticleLandmarks.add(new Point2D.Float((float)landmark.getX(), (float)landmark.getY()));
+        }
+        
+      }
+      
+      // updates particle locations based on initSet
+      this.locations = new ArrayList();
+      
+      for (Map.Entry<String, LandmarkParticleSet> it : this.particleSet.getLandmarkInitSet().getParticleSetMap().entrySet())
+      {
+          LandmarkParticleSet lpset = it.getValue();
+          for (LandmarkParticleSet.MyParticle particle : lpset.getParticles())
+          {
+              this.locations.add(new Point2D.Float( (float) particle.getX(), (float) particle.getY() ));
+          }
+      }
+            
+      // keep local understanding of user location
       userX += x;
       userY += y;
   }
@@ -192,9 +219,14 @@ class LocationEstimatorImpl implements LocationEstimator
     return this.locations;
   }
   
-  Point2D.Float getEstimatedLocation()
+  List<Point2D.Float> getEstimatedLocation()
   {
-    return bestWeightParticle;
+    return bestWeightParticleLandmarks;
+  }
+  
+  public Point2D.Float getEstimatedUserLocation()
+  {
+    return bestWeightUser;
   }
   
   

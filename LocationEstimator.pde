@@ -43,7 +43,7 @@ interface LocationEstimator {
   public void addUserMovement(float x, float y);
   
   public List<Point2D.Float> getProbableLocations();
-  public Point2D.Float getEstimatedLocation();
+  public List<Point2D.Float> getEstimatedLocation();
   
   public Point2D.Float getEstimatedUserLocation();
   

@@ -13,7 +13,7 @@ import java.util.Set;
 class LandmarkParticleSet
 {
   
-  class MyParticle
+  public class MyParticle
   {
     private double x, y, weight;
     public double getX() { return x; }
@@ -63,6 +63,8 @@ class LandmarkParticleSet
   private double maxVariance;
   private int measurements;
   private List<MyParticle> particles;
+  
+  public List<MyParticle> getParticles() { return particles; }
   
   public LandmarkParticleSet(int nParticles, int stdRange, int randomParticles, 
                             double effectiveParticleThreshold, double maxVariance)

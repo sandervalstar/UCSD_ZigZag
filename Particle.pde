@@ -204,7 +204,7 @@ class Particle {
   * Returns landmarks
   * @return {Map}
   */
-  public  Map<String, Landmark> getLandmarks()
+  public Map<String, Landmark> getLandmarks()
   {
     return this.landmarks;
   }

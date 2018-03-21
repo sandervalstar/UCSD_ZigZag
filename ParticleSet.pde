@@ -10,6 +10,8 @@ class ParticleSet
   private List<String> initialisedLandmarks;
   private LandmarkInitializationSet landmarkInitSet;
 
+  public LandmarkInitializationSet getLandmarkInitSet() { return landmarkInitSet; }
+
   /**
    * Create a new particle set with a given number of particles
    * @param  {Number} nParticles Number of particles

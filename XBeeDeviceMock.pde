@@ -17,7 +17,7 @@ class XBeeDeviceMock implements XBeeDevice {
   }
 
   private void init(String a1, String a2) {
-    this.rssi = (float)Math.random() * 100;
+    this.rssi = (float)Math.random() * 50;
     this.address16 = a1;
     this.address64 = a2;
     this.name = "router";

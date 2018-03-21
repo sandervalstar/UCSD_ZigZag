@@ -32,4 +32,20 @@ class LocationEstimator {
     }
     this.distanceEstimators.get(distanceEstimators.size()-1).addMeasurement(rssi);
   }
+  
+  public Point2D.Double getMinAndMax() {
+      double min = 0;
+      double max = 1;
+    
+      for(DistanceEstimator e : this.distanceEstimators) {
+        if(e.x > max) max = e.x;
+        if(e.x < min) min = e.x;
+        if(e.y > max) max = e.y;
+        if(e.y < min) min = e.y;
+        if(e.distance > max) max = e.distance;
+        if(e.distance < min) min = e.distance;
+      }
+      
+      return new Point2D.Double(min, max);
+  }
 }

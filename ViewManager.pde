@@ -240,8 +240,9 @@ class ViewManager {
   }
   
   void drawUser() {
-      int min = 0;
-      int max = 10;
+      Point2D.Double mm = this.locationEstimator.getMinAndMax();
+      float min = (float)mm.x;
+      float max = (float)mm.y;
       
       Point2D.Double userLocation = this.locationEstimator.getUserLocation();
       fill(color(255,0,0));
@@ -254,17 +255,9 @@ class ViewManager {
   }
   
   void drawDistanceArcs() {
-      float min = 0;
-      float max = 1;
-      
-      for(DistanceEstimator e : this.locationEstimator.distanceEstimators) {
-        if(e.x > max) max = (float)e.x;
-        if(e.x < min) min = (float)e.x;
-        if(e.y > max) max = (float)e.y;
-        if(e.y < min) min = (float)e.y;
-        if(e.distance > max) max = (float)e.distance;
-        if(e.distance < min) min = (float)e.distance;
-      }
+      Point2D.Double mm = this.locationEstimator.getMinAndMax();
+      float min = (float)mm.x;
+      float max = (float)mm.y;
       
       for(DistanceEstimator e : this.locationEstimator.distanceEstimators) {
         float x = scalePointCoordinate((float)e.x, min, max, 0, width); 

@@ -219,7 +219,7 @@ class ViewManager {
        } else if (this.device != null) {
          //println("udpating "+device.getRSSI());    
          this.device = this.device.updateRSSI();
-         this.locationEstimator.addMeasurement(this.device.getRSSI());
+         this.locationEstimator.addMeasurement("device1", this.device.getRSSI(), "device1");
        }
     }
   }   

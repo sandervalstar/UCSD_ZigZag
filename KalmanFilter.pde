@@ -25,6 +25,11 @@ class KalmanFilter
     this.cov = Float.NaN;
     this.x   = Float.NaN;
   }
+  
+  public KalmanFilter(float R, float Q) 
+  {
+      this(R, Q, 1, 0, 1);
+  }
  
   /**
   * Filter a new value

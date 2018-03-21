@@ -19,7 +19,7 @@ class XBeeDeviceMock implements XBeeDevice {
   }
   
    float getCurrentRSSI() {
-     return this.rssi;
+     return -this.rssi;
    }
    
    XBeeDevice getNewRSSI() {

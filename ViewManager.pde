@@ -14,7 +14,7 @@ class ViewManager {
   int LINE_MARGIN = MARGIN3-5;
   int ARROW_LENGTH = 20;
   
-  boolean USE_MOCKS = false;
+  boolean USE_MOCKS = true;
   
   List<XBeeDevice> devices = new ArrayList();
   private XBeeDevice device;

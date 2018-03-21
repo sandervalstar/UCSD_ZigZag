@@ -83,6 +83,7 @@ class ParticleSet
         {
           for (int i = 0; i < this.particleList.size(); i++)
           {
+            println("particleSet addLandmark(uid)");
             this.particleList.get(i).addLandmark(uid, r, name, pe.x, pe.y, pe.varX, pe.varY);
           }
 

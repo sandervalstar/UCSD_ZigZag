@@ -32,16 +32,19 @@ class ViewManager {
   final String MOVEMENT_POPUP = "MOVEMENT_POPUP";
   String activeScreen = "";
       
+  LocationEstimator locationEstimator = new LocationEstimator();     
+      
   public ViewManager(PApplet app) {
     this.app = app;
-    this.showHomeScreen();
-    //this.showLocatorScreen(device);
+    //this.showHomeScreen();
+    this.showLocatorScreen(device);
     
     this.device = new XBeeDeviceMock();
   };
   
   public void draw() {
     fill(color(255,255,255));
+    stroke(color(255,255,255));
     if(LOCATOR.equals(activeScreen) || MOVEMENT_POPUP.equals(activeScreen)) {
       synchronized(lock) {
         if (device != null) {
@@ -49,6 +52,8 @@ class ViewManager {
           this.drawPageTitle(device.getName());
           textAlign(LEFT,BOTTOM);
           //text(this.device.getRSSI(), 100, 100);
+          drawDistanceArcs();
+          drawUser();
           drawMovementButtons();
           if(MOVEMENT_POPUP.equals(activeScreen)) {
             drawMovementPopup();
@@ -63,6 +68,11 @@ class ViewManager {
   }
   
   private void drawMovementButtons() {
+    stroke(color(255,255,255));
+    fill(color(0));
+    rect(-1, height-LINE_MARGIN, width+2, height-400);
+    fill(color(255,255,255));
+    
     line(width/2, height, width/2, height-LINE_MARGIN);
     line(width/4, height, width/4, height-LINE_MARGIN);
     line(3*width/4, height, 3*width/4, height-LINE_MARGIN);
@@ -127,7 +137,6 @@ class ViewManager {
   }
   
   private void showLocatorScreen(XBeeDevice device) {
-    println("show locator screen " + device.getName());
     this.activeScreen = LOCATOR;
     this.clearScreen();
     this.device = device;
@@ -206,6 +215,7 @@ class ViewManager {
          //println("udpating "+device.getRSSI());    
 
           this.device = this.device.getNewRSSI();
+          this.locationEstimator.addMeasurement(this.device.getCurrentRSSI());
        }
     }
   }   
@@ -229,103 +239,53 @@ class ViewManager {
     
   }
   
-  
-  void stopMeasurements() {
-    
+  void drawUser() {
+      int min = 0;
+      int max = 10;
+      
+      Point2D.Double userLocation = this.locationEstimator.getUserLocation();
+      fill(color(255,0,0));
+      ellipse(
+        scalePointCoordinate((float)userLocation.x, min, max, 0, width),
+        height-DRAW_MARGIN - scalePointCoordinate((float)userLocation.y, min, max, 0, height-DRAW_MARGIN-MARGIN2),
+        10,10);
+        
+      fill(color(255,255,255));
   }
   
-  private void drawProbableLocations(List<Point2D.Float> locations, List<Point2D.Float> estimatedLocations) {
-    float max = Float.MIN_VALUE;
-    float min = Float.MAX_VALUE;
-    float sum = 0f;
-    
-    for(Point2D.Float p : locations) {
-      if(max < p.x) max = p.x;
-      if(min > p.x) min = p.x;
-      if(max < p.y) max = p.y;
-      if(min > p.y) min = p.y;
-      sum += p.x + p.y;
-    }
-    
-   for(Point2D.Float p : estimatedLocations) {
-      if(max < p.x) max = p.x;
-      if(min > p.x) min = p.x;
-      if(max < p.y) max = p.y;
-      if(min > p.y) min = p.y;
-      sum += p.x + p.y;
-    }
-    
-    Point2D.Float userLocation = this.locationEstimator.getEstimatedUserLocation();
-    max = Math.max(Math.max(max, userLocation.x), userLocation.y);
-    min = Math.min(Math.min(min, userLocation.x), userLocation.y);
-    
-    float average = sum / (2*locations.size());
-    
-    float absMin = Math.abs(min);
-    if(absMin > max) {
-      max = absMin;
-    } else {
-      min = -max;
-    }
-    
-    
-  println("min "+min+" max "+max + " userlocation: "+userLocation.x +", "+userLocation.y);
-    
-    for(Point2D.Float p : locations) {
-            //println("drawing point ("+p.x+", "+p.y+")");
-      ellipse(
-        scalePointCoordinate(p.x, min, max, 0, width), 
-        scalePointCoordinate(-p.y, min, max, DRAW_MARGIN, height-DRAW_MARGIN),
-        5, 5);
-    }
-    
-    if(locations.size() > 0) {
-      //println("estimated locations size "+estimatedLocations.size());
-     //draw estimate location
-       fill(color(0,255,0));
-       for(Point2D.Float estimatedLocation : estimatedLocations) {
-          //println("drawing point ("+p.x+", "+p.y+")");
-    
-         ellipse(
-      scalePointCoordinate(estimatedLocation.x, min, max, 0, width), 
-      scalePointCoordinate(-estimatedLocation.y, min, max, DRAW_MARGIN, height-DRAW_MARGIN),
-      9, 9);
+  void drawDistanceArcs() {
+      float min = 0;
+      float max = 1;
+      
+      for(DistanceEstimator e : this.locationEstimator.distanceEstimators) {
+        if(e.x > max) max = (float)e.x;
+        if(e.x < min) min = (float)e.x;
+        if(e.y > max) max = (float)e.y;
+        if(e.y < min) min = (float)e.y;
+        if(e.distance > max) max = (float)e.distance;
+        if(e.distance < min) min = (float)e.distance;
       }
       
-      //draw user
-      fill(color(255,0,0));
-      //println("drawing user ("+userLocation.x+", "+userLocation.y+")");
-        ellipse(
-      scalePointCoordinate(userLocation.x, min, max, 0, width), 
-      scalePointCoordinate(-userLocation.y, min, max, DRAW_MARGIN, height-DRAW_MARGIN),
-      10, 10);
-      fill(color(255,255,255));
-    }
-    ////draw the axis
-    //fill(0,255,0);
-    ////print("min: "+min+" max "+max);
-    //for(float i = min; i < max; i++) {
-    //  ellipse(
-    //    scalePointCoordinate(i, min, max, 0, width), 
-    //    scalePointCoordinate(0, min, max, DRAW_MARGIN, height-DRAW_MARGIN),
-    //    5, 5);
-        
-    //   ellipse(
-    //    scalePointCoordinate(0, min, max, 0, width), 
-    //    scalePointCoordinate(-i, min, max, DRAW_MARGIN, height-DRAW_MARGIN),
-    //    5, 5);
-    //}
-        
-    
-    stroke(255);
-    //line(0, MARGIN2, width, MARGIN2);
-    line(0, height-LINE_MARGIN, width, height-LINE_MARGIN);
+      for(DistanceEstimator e : this.locationEstimator.distanceEstimators) {
+        float x = scalePointCoordinate((float)e.x, min, max, 0, width); 
+        float y = height-DRAW_MARGIN - scalePointCoordinate((float)e.y, min, max, 0, height-DRAW_MARGIN-MARGIN2);
+        float distanceX = scalePointCoordinate((float)e.distance, min, max, 0, width);
+        float distanceY = scalePointCoordinate((float)e.distance, min, max, 0, height-DRAW_MARGIN-MARGIN2);
+        ellipse(x,y,5,5);
+          
+        noFill();
+        stroke(color(0,0,255));
+        println("drawing arc x "+e.x+" y "+e.y+" radius "+e.distance +" min "+min+" max "+max);
+        ellipse(x,y,distanceX,distanceY);
+        fill(color(255,255,255));
+      }
+      
   }
   
-  private float scalePointCoordinate(float val, float min, float max, float targetMin, float targetMax) {
-    float center = (targetMax-targetMin)/2+targetMin;
-    return val < 0 ? map(val, min, 0, targetMin, center) : map(val, 0, max, center, targetMax);
-  }
+    private float scalePointCoordinate(double val, float min, float max, float targetMin, float targetMax) {
+      return map((float)val, 0, max, targetMin, targetMax);
+    }
+ 
   
   private void drawMovementPopup() {
     this.activeScreen = MOVEMENT_POPUP;
@@ -348,16 +308,16 @@ class ViewManager {
     synchronized(lock) {
       switch(nextMove) {
         case L:
-          this.locationEstimator.addUserMovement(-1f, 0f);
+          this.locationEstimator.addUserMovement(-1d, 0d);
           break;
         case U:
-          this.locationEstimator.addUserMovement(0f, 1f);
+          this.locationEstimator.addUserMovement(0d, 1d);
           break;
         case D:
-          this.locationEstimator.addUserMovement(0f, -1f);
+          this.locationEstimator.addUserMovement(0d, -1d);
           break;
         case R:
-          this.locationEstimator.addUserMovement(1f, 0f);
+          this.locationEstimator.addUserMovement(1d, 0d);
           break;
       }
     }

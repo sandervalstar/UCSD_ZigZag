@@ -20,8 +20,6 @@ class ViewManager {
   private XBeeDevice device;
   private final Object lock = new Object();
   
-  private LocationEstimator locationEstimator;
-  
   private String nextMove = "";
   final String L = "left";
   final String R = "right";
@@ -39,7 +37,6 @@ class ViewManager {
     this.showHomeScreen();
     //this.showLocatorScreen(device);
     
-    this.locationEstimator = new LocationEstimatorImpl(new SlacConfiguration());
     this.device = new XBeeDeviceMock();
   };
   
@@ -52,8 +49,6 @@ class ViewManager {
           this.drawPageTitle(device.getName());
           textAlign(LEFT,BOTTOM);
           //text(this.device.getRSSI(), 100, 100);
-          List<Point2D.Float> locations = this.locationEstimator.getProbableLocations();
-          drawProbableLocations(locations, this.locationEstimator.getEstimatedLocation());
           drawMovementButtons();
           if(MOVEMENT_POPUP.equals(activeScreen)) {
             drawMovementPopup();
@@ -137,8 +132,6 @@ class ViewManager {
     this.clearScreen();
     this.device = device;
     
-    this.locationEstimator = new LocationEstimatorImpl(new SlacConfiguration());
-    
     this.startMeasurements();
   }
   
@@ -213,7 +206,6 @@ class ViewManager {
          //println("udpating "+device.getRSSI());    
 
           this.device = this.device.getNewRSSI();
-          this.locationEstimator.addMeasurement("device1", this.device.getCurrentRSSI(), "device1");
        }
     }
   }   

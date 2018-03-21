@@ -52,9 +52,6 @@ class ViewManager {
           this.drawPageTitle(device.getName());
           textAlign(LEFT,BOTTOM);
           //text(this.device.getRSSI(), 100, 100);
-          fill(color(255,0,0));
-          ellipse(width/2, (height-2*DRAW_MARGIN)/2+DRAW_MARGIN, 10, 10);
-          fill(color(255,255,255));
           List<Point2D.Float> locations = this.locationEstimator.getProbableLocations();
           drawProbableLocations(locations, this.locationEstimator.getEstimatedLocation());
           drawMovementButtons();
@@ -245,7 +242,7 @@ class ViewManager {
     
   }
   
-  private void drawProbableLocations(List<Point2D.Float> locations, Point2D.Float estimatedLocation) {
+  private void drawProbableLocations(List<Point2D.Float> locations, List<Point2D.Float> estimatedLocations) {
     float max = Float.MIN_VALUE;
     float min = Float.MAX_VALUE;
     float sum = 0f;
@@ -258,6 +255,18 @@ class ViewManager {
       sum += p.x + p.y;
     }
     
+   for(Point2D.Float p : estimatedLocations) {
+      if(max < p.x) max = p.x;
+      if(min > p.x) min = p.x;
+      if(max < p.y) max = p.y;
+      if(min > p.y) min = p.y;
+      sum += p.x + p.y;
+    }
+    
+    Point2D.Float userLocation = this.locationEstimator.getEstimatedUserLocation();
+    max = Math.max(Math.max(max, userLocation.x), userLocation.y);
+    min = Math.min(Math.min(min, userLocation.x), userLocation.y);
+    
     float average = sum / (2*locations.size());
     
     float absMin = Math.abs(min);
@@ -268,6 +277,7 @@ class ViewManager {
     }
     
     for(Point2D.Float p : locations) {
+            //println("drawing point ("+p.x+", "+p.y+")");
       ellipse(
         scalePointCoordinate(p.x, min, max, 0, width), 
         scalePointCoordinate(-p.y, min, max, DRAW_MARGIN, height-DRAW_MARGIN),
@@ -275,32 +285,26 @@ class ViewManager {
     }
     
     if(locations.size() > 0) {
+      //println("estimated locations size "+estimatedLocations.size());
      //draw estimate location
-      fill(color(0,255,0));
-        ellipse(
+       fill(color(0,255,0));
+       for(Point2D.Float estimatedLocation : estimatedLocations) {
+          //println("drawing point ("+p.x+", "+p.y+")");
+    
+         ellipse(
       scalePointCoordinate(estimatedLocation.x, min, max, 0, width), 
       scalePointCoordinate(-estimatedLocation.y, min, max, DRAW_MARGIN, height-DRAW_MARGIN),
       9, 9);
-      //draw indicators of 1m distance
-      fill(color(0,0,255));
+      }
+      
+      //draw user
+      fill(color(255,0,0));
+      //println("drawing user ("+userLocation.x+", "+userLocation.y+")");
         ellipse(
-      scalePointCoordinate(1, min, max, 0, width), 
-      scalePointCoordinate(0, min, max, DRAW_MARGIN, height-DRAW_MARGIN),
-      5, 5);
-        ellipse(
-      scalePointCoordinate(-1, min, max, 0, width), 
-      scalePointCoordinate(0, min, max, DRAW_MARGIN, height-DRAW_MARGIN),
-      5, 5);
-        ellipse(
-      scalePointCoordinate(0, min, max, 0, width), 
-      scalePointCoordinate(1, min, max, DRAW_MARGIN, height-DRAW_MARGIN),
-      5, 5);
-        ellipse(
-      scalePointCoordinate(0, min, max, 0, width), 
-      scalePointCoordinate(-1, min, max, DRAW_MARGIN, height-DRAW_MARGIN),
-      5, 5);
-      fill(color(255,255,255)); 
-      fill(color(255,255,255)); 
+      scalePointCoordinate(userLocation.x, min, max, 0, width), 
+      scalePointCoordinate(-userLocation.y, min, max, DRAW_MARGIN, height-DRAW_MARGIN),
+      10, 10);
+      fill(color(255,255,255));
     }
     ////draw the axis
     //fill(0,255,0);

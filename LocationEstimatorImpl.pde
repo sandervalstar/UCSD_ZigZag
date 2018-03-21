@@ -59,6 +59,7 @@ class LocationEstimatorImpl implements LocationEstimator
   
   protected void updateLandmark(String uid, float rssi)
   {
+    println("Updating landmark " + uid);
     MyLandmark landmark = landmarks.get(uid);
     landmark.getFilter().filter(rssi, 0);
     landmark.incrementMeasurements();
@@ -111,19 +112,23 @@ class LocationEstimatorImpl implements LocationEstimator
     for (Map.Entry<String, MyLandmark> entry : landmarks.entrySet())
     {
       MyLandmark thisLandmark = entry.getValue();
-      final double rssi =  thisLandmark.getFilter().lastMeasurement();
-      
-      
-      // the original code converts the ble name here, it does not seem like we need it 
-      // https://github.com/wouterbulten/slacjs/blob/master/src/app/models/sensor.js
-      
-      observedLandmarks.add( new ObservedLandmark(entry.getKey(),                 // uid
-                                                  rssiToDistance(rssi),
-                                                  thisLandmark.getName(),
-                                                  thisLandmark.getMoved()));
-                                                  
-      thisLandmark.setChanged(true);
-      thisLandmark.setMoved(true);
+      if (thisLandmark.getChanged())
+      {
+        final double rssi =  thisLandmark.getFilter().lastMeasurement();
+        
+        
+        // the original code converts the ble name here, it does not seem like we need it 
+        // https://github.com/wouterbulten/slacjs/blob/master/src/app/models/sensor.js
+        
+        observedLandmarks.add( new ObservedLandmark(entry.getKey(),                 // uid
+                                                    rssiToDistance(rssi),
+                                                    thisLandmark.getName(),
+                                                    thisLandmark.getMoved()));
+                                                    
+        // reset flags                                            
+        thisLandmark.setChanged(false);
+        thisLandmark.setMoved(false);
+      }
     }
     
     return observedLandmarks;

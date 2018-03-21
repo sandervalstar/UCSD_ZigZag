@@ -69,7 +69,7 @@ class ParticleSet
 
       if (!this.initialisedLandmarks.contains(uid))
       {
-        println("particleSet initialisedLandmarks.contains(uid)");
+        println("particleSet !initialisedLandmarks.contains(uid)");
 
         double uX = this.userEstimateX();
         double uY = this.userEstimateY();

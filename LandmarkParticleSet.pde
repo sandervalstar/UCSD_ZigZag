@@ -80,6 +80,7 @@ class LandmarkParticleSet
   
   public void addMeasurement(double x, double y, double r)
   {
+    println("adding landmark measurement "+this.measurements);
     if (this.measurements == 0)
     {
       this.particles = this.randomParticles(this.numParticles, x, y, r);  

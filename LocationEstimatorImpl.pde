@@ -137,12 +137,12 @@ class LocationEstimatorImpl implements LocationEstimator
   {
       print("Slac running iteration " + ++iteration);
       
-      double distX = x - userX;
-      double distY = y - userY;
+      double distX = x;
+      double distY = y;
       
       // find distance and heading
-      double dist = Math.sqrt(Math.pow(x - userX, 2) + Math.pow(y - userY, 2));
-      double heading = Math.atan(distY / distX);
+      double dist = Math.sqrt(distX*distX + distY*distY);
+      double heading = Math.atan2(distY, distX);
       
       // sample a new pose for each particle in the set
       this.particleSet.samplePose(dist, heading);
@@ -171,6 +171,9 @@ class LocationEstimatorImpl implements LocationEstimator
           bestWeightParticle = point;
         }
       }
+      
+      userX += x;
+      userY += y;
   }
   
   

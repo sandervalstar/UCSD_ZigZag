@@ -63,7 +63,7 @@ static class MathUtil
    * @param  {int}
    * @return {double}
    */
-  public static double log(int x, int base)
+  public static double log(double x, double base)
   {
     return Math.log(x) / Math.log(base);
   }

@@ -122,7 +122,7 @@ class Particle {
     // Find the correct EKF
     final Landmark l = this.landmarks.get(uid);
     if(l != null) {
-      println("user: "+user+" l: "+l);  
+      //println("user: "+user+" l: "+l);  
   
       //Compute the difference between the predicted user position of this
       //particle and the predicted position of the landmark.

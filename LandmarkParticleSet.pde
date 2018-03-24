@@ -57,8 +57,8 @@ class LandmarkParticleSet
   }
   
   private int numParticles;
-  private int stdRange;
-  private int randomParticles;
+  private double stdRange;
+  private int randomParticlesCount;
   private double effectiveParticleThreshold;
   private double maxVariance;
   private int measurements;
@@ -66,12 +66,12 @@ class LandmarkParticleSet
   
   public List<MyParticle> getParticles() { return particles; }
   
-  public LandmarkParticleSet(int nParticles, int stdRange, int randomParticles, 
+  public LandmarkParticleSet(int nParticles, double stdRange, int randomParticles, 
                             double effectiveParticleThreshold, double maxVariance)
   {
     this.numParticles = nParticles;
     this.stdRange = stdRange;
-    this.randomParticles = randomParticles;
+    this.randomParticlesCount = randomParticles;
     this.effectiveParticleThreshold = effectiveParticleThreshold;
     this.maxVariance = maxVariance;
     this.measurements = 0;
@@ -80,7 +80,7 @@ class LandmarkParticleSet
   
   public void addMeasurement(double x, double y, double r)
   {
-    println("adding landmark measurement "+this.measurements);
+    println("adding landmark measurement " + this.measurements);
     if (this.measurements == 0)
     {
       this.particles = this.randomParticles(this.numParticles, x, y, r);  
@@ -90,11 +90,16 @@ class LandmarkParticleSet
       this.updateWeights(x, y, r);
       List<Double> weights = this.getWeightMappings();
       
-      if (this.numberOfEffectiveParticles(weights) < this.effectiveParticleThreshold) 
+      double effectiveParticles = this.numberOfEffectiveParticles(weights);
+      if (effectiveParticles < this.effectiveParticleThreshold) 
       {
-        List<MyParticle> randomSet = this.resample(this.numParticles - this.randomParticles);
+        List<MyParticle> randomSet = this.resample(this.numParticles - this.randomParticlesCount);
+        //println("Resampling! " + randomSet.size() + " --> " + this.numParticles);
+        this.particles = this.randomParticles(this.numParticles - randomSet.size(), x, y, r);
         this.particles.addAll(randomSet);
       }
+      
+        println("EffectiveParticles vs Threshold" + effectiveParticles + " , " + effectiveParticleThreshold);
     }
     this.measurements++;
   }
@@ -105,15 +110,18 @@ class LandmarkParticleSet
    */
   public PositionEstimate positionEstimate()
   {
-    if (this.measurements < 10)
+    if (this.measurements < 4)
     {
       return new PositionEstimate (0, 0, 0, 1, 1);
     }
     
     final Pair pair = this.particleVariance();
+    
+    println("======== EstimatingLandmarkPosition: Variance X,Y, max: " + pair.getX() + "," + pair.getY() + "," + this.maxVariance);
     if (pair.getX() < this.maxVariance && pair.getY() < this.maxVariance)
     {
       Pair avg = this.averagePosition();
+      println("======== EstimatingLandmarkPosition" +  avg.x + " " + avg.y+ " " + pair.x+ " " + pair.y);
       return new PositionEstimate(1, avg.x, avg.y, pair.x, pair.y);
     }
     return new PositionEstimate(0, 0, 0, 1, 1);
@@ -141,14 +149,10 @@ class LandmarkParticleSet
     List<Double> weights = normalizeWeights(this.getWeightMappings());
     
     double x = 0;
-    for (int i = 0; i < weights.size(); i++)
-    {
-      x += weights.get(i) * this.particles.get(i).getX();
-    }
-    
     double y = 0;
     for (int i = 0; i < weights.size(); i++)
     {
+      x += weights.get(i) * this.particles.get(i).getX(); 
       y += weights.get(i) * this.particles.get(i).getY();
     }
     
@@ -168,7 +172,7 @@ class LandmarkParticleSet
     for (int i : indices)
     {
       particlesLocal.add(new MyParticle(MathUtil.randn(this.particles.get(i).getX(), this.stdRange/4),
-                                        MathUtil.randn(this.particles.get(i).getY(), this.stdRange/4), 1));
+                                        MathUtil.randn(this.particles.get(i).getY(), this.stdRange/4), 1.0));
     }
     return particlesLocal;
   }
@@ -184,11 +188,12 @@ class LandmarkParticleSet
   }
   
   public List<MyParticle> randomParticles(int n, double x, double y, double r) {
+    println("Generating random particles (circle) for location " + x + " and " + y + " with radius " + r);
     final double deltaTheta = 2 * Math.PI/n;
     final List<MyParticle> particles = new ArrayList<MyParticle>();
     for (int i = 0; i < n; i++)
     {
-      double theta = i * deltaTheta;
+      double theta = ((double) (i)) * deltaTheta;
       double range = r * MathUtil.randn(0, this.stdRange);
       Point2D.Double pair = MotionUtil.polarToCartesian(range, theta);
       MyParticle particle = new MyParticle(x + pair.x, y + pair.y, 1);
@@ -199,6 +204,7 @@ class LandmarkParticleSet
   
   public void updateWeights(double x, double y, double r)
   {
+    println("Upadting weights with x,y,r: " + x + " " + y + " " + r);
     for (MyParticle p : this.particles)
     {
       double dist = Math.sqrt(Math.pow(p.getX() - x, 2) + Math.pow(p.getY() - y, 2));
@@ -217,10 +223,10 @@ class LandmarkParticleSet
   public Set<Integer> lowVarianceSampling(int nParticles, List<Double> weights)
   {
 
-    int M = weights.size();
+    double M = weights.size();
     List<Double> normalizedWeights = normalizeWeights(weights);
 
-    double rand = Math.random() * (1 / M);
+    double rand = Math.random() * (1.0 / M);
 
     double c = normalizedWeights.get(0);
     int i = 0;
@@ -229,7 +235,7 @@ class LandmarkParticleSet
 
     for (int m = 1; m <= nParticles; m++)
     {
-      double U = rand + (m - 1) * (1 / M);
+      double U = rand + (m - 1.0) * (1.0 / M);
 
       while (U > c) {
         i = i + 1;
@@ -251,20 +257,21 @@ class LandmarkParticleSet
     {
       total += (i*i);
     }
-    return 1 / total;
+    return 1.0 / total;
   }
   
   List<Double> normalizeWeights(List<Double> weights)
   {
     double totalWeight = 0;
-    for (double i : weights)
+    for (double w : weights)
     {
-      totalWeight += i;
+      totalWeight += w;
     }
+    
     List<Double> weights2 = new ArrayList<Double>();
-    for (double i : weights) 
+    for (double w : weights) 
     {
-      weights2.add(i / totalWeight);
+      weights2.add(w / totalWeight);
     }
     return weights2;
   }
@@ -278,9 +285,9 @@ class LandmarkParticleSet
    public double varianceX(List<MyParticle> data)
    {
   
-    int sum = 0;
+    double sum = 0;
     double sumSq = 0;
-    int n = data.size();
+    double n = data.size();
   
     for (MyParticle part : data)
     {
@@ -301,9 +308,9 @@ class LandmarkParticleSet
    public double varianceY(List<MyParticle> data)
    {
   
-    int sum = 0;
+    double sum = 0;
     double sumSq = 0;
-    int n = data.size();
+    double n = data.size();
   
     for (MyParticle part : data)
     {

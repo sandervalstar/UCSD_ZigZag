@@ -17,6 +17,7 @@ class User
   
   User(SlacConfiguration config, double x, double y, double theta)
   {
+    println("Creating user with " + x + " " + y + " " +  theta);
     this.x = x;
     this.y = y;
     this.theta = theta;

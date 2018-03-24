@@ -56,7 +56,7 @@ class ParticleSet
    */
   public ParticleSet processObservation(String uid, double r, String name, boolean moved)
   {
-    println("particleSet processObservation");
+    println("particleSet processObservation for uid,r :" + uid + "," + r);
 
     if (uid != null)
     {
@@ -71,8 +71,9 @@ class ParticleSet
       {
         println("particleSet !initialisedLandmarks.contains(uid)");
 
-        double uX = this.userEstimateX();
-        double uY = this.userEstimateY();
+        List<Double> weights = normalizeWeights(getWeightMappings(this.particleList));
+        double uX = this.userEstimateX(weights);
+        double uY = this.userEstimateY(weights);
         
         this.landmarkInitSet.addMeasurement(uid, uX, uY, r);
 
@@ -193,19 +194,19 @@ class ParticleSet
    * Get the best estimate of the current user position
    * @return {object}
    */
-  private double userEstimateX() {
-    double x = 0;
+  private double userEstimateX(List<Double> weights) {
+    double x = 0; int counter = 0;
     for(Particle p : this.particleList) {
-      x += p.getWeight()*p.getUser().getPositionX();
+      x += weights.get(counter++)*p.getUser().getPositionX();
     }
     
     return x;
   }
   
-  private double userEstimateY() {
-    double y = 0;
+  private double userEstimateY(List<Double> weights) {
+    double y = 0; int counter = 0;
     for(Particle p : this.particleList) {
-      y += p.getWeight()*p.getUser().getPositionY();
+      y += weights.get(counter++)*p.getUser().getPositionY();
     }
     
     return y;

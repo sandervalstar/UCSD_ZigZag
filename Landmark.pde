@@ -1,4 +1,4 @@
-class Landmark
+ class Landmark
 {
   private double x, y;
   private String name;

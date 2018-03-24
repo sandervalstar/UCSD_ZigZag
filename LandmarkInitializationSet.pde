@@ -7,8 +7,8 @@ import java.util.List;
 import java.util.Map;
 
 class LandmarkInitializationSet {
-  private int nParticles, stdRange, randomParticles;
-  private double effectiveParticleThreshold, maxVariance;
+  private int nParticles;
+  private double effectiveParticleThreshold, maxVariance, stdRange, randomParticles;
   private Map<String, LandmarkParticleSet> particleSetMap;
   
   public Map<String, LandmarkParticleSet> getParticleSetMap() { return particleSetMap; }
@@ -47,8 +47,9 @@ class LandmarkInitializationSet {
    */
   public LandmarkInitializationSet addMeasurement(String uid, double x, double y, double r) {
     if (!this.has(uid)) {
+      println("Creating new particle set for landmark " + uid + " at location " + x + " and " + y);
       this.particleSetMap.put(uid, new LandmarkParticleSet(
-        this.nParticles, this.stdRange, this.randomParticles, this.effectiveParticleThreshold, this.maxVariance
+        this.nParticles, this.stdRange, (int) this.randomParticles, this.effectiveParticleThreshold, this.maxVariance
       ));
     }
 

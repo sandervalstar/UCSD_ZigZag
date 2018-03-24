@@ -40,16 +40,15 @@ class ViewManager {
     //this.showLocatorScreen(device);
     
     this.locationEstimator = new LocationEstimatorImpl(new SlacConfiguration());
-    
-    this.device = new XBeeDeviceMock(locationEstimator, new Point2D.Float(3,4));
+    this.device = new XBeeDeviceMock();
   };
   
   public void draw() {
-    fill(color(0));
+    fill(color(255,255,255));
     if(LOCATOR.equals(activeScreen) || MOVEMENT_POPUP.equals(activeScreen)) {
       synchronized(lock) {
         if (device != null) {
-          background(200);
+          background(0);
           this.drawPageTitle(device.getName());
           textAlign(LEFT,BOTTOM);
           //text(this.device.getRSSI(), 100, 100);
@@ -91,7 +90,7 @@ class ViewManager {
   }
   
   private void clearHomeScreen() {
-    background(200);
+    background(0);
     if(this.c != null) {
       this.c.remove(t);
       joinButton.setY(height+100); //hack because interfascia has a bug that doesn't let us remove buttons
@@ -100,7 +99,7 @@ class ViewManager {
   
   public void showHomeScreen() {
     this.activeScreen = HOME;
-    background(200);
+    background(0);
     this.drawPageTitle("ZigZag Home");
     this.drawPageSubtitle("Join a network first");    
     
@@ -115,13 +114,14 @@ class ViewManager {
   
   public void showNetworkScreen(int panId) {
     this.activeScreen = NETWORK;
+    println("sdfjksdflkdsj");
     this.clearScreen();
     drawPageTitle("XBee network");
     drawPageSubtitle(""+panId);
     
     XBeeNetwork network;
     if(USE_MOCKS) {
-       network = new XBeeNetworkMock(locationEstimator, panId);
+       network = new XBeeNetworkMock(panId);
     } else {
       Antenna antenna = new AntennaImpl();
       network = new XBeeNetworkImpl(panId, antenna);
@@ -137,6 +137,7 @@ class ViewManager {
     this.clearScreen();
     this.device = device;
     
+    this.locationEstimator = new LocationEstimatorImpl(new SlacConfiguration());
     
     this.startMeasurements();
   }
@@ -276,7 +277,7 @@ class ViewManager {
     }
     
     
-   //println("min "+min+" max "+max + " userlocation: "+userLocation.x +", "+userLocation.y);
+  println("min "+min+" max "+max + " userlocation: "+userLocation.x +", "+userLocation.y);
     
     for(Point2D.Float p : locations) {
             //println("drawing point ("+p.x+", "+p.y+")");
@@ -286,12 +287,12 @@ class ViewManager {
         5, 5);
     }
     
-    if(estimatedLocations.size() > 0) {
+    if(locations.size() > 0) {
       //println("estimated locations size "+estimatedLocations.size());
      //draw estimate location
        fill(color(0,255,0));
        for(Point2D.Float estimatedLocation : estimatedLocations) {
-          //println("drawing point ("+estimatedLocation.x+", "+estimatedLocation.y+")");
+          //println("drawing point ("+p.x+", "+p.y+")");
     
          ellipse(
       scalePointCoordinate(estimatedLocation.x, min, max, 0, width), 
@@ -299,35 +300,32 @@ class ViewManager {
       9, 9);
       }
       
-
-    }
-    
       //draw user
       fill(color(255,0,0));
-     //println("drawing user ("+userLocation.x+", "+userLocation.y+")");
+      //println("drawing user ("+userLocation.x+", "+userLocation.y+")");
         ellipse(
       scalePointCoordinate(userLocation.x, min, max, 0, width), 
       scalePointCoordinate(-userLocation.y, min, max, DRAW_MARGIN, height-DRAW_MARGIN),
       10, 10);
-      fill(color(0,0,0));    
-    
-    //draw the axis
-    fill(0,0,255);
-    //print("min: "+min+" max "+max);
+      fill(color(255,255,255));
+    }
+    ////draw the axis
+    //fill(0,255,0);
+    ////print("min: "+min+" max "+max);
     //for(float i = min; i < max; i++) {
     //  ellipse(
-    //    scalePointCoordinate(i+userLocation.x, min, max, 0, width), 
-    //    scalePointCoordinate(-userLocation.y, min, max, DRAW_MARGIN, height-DRAW_MARGIN),
+    //    scalePointCoordinate(i, min, max, 0, width), 
+    //    scalePointCoordinate(0, min, max, DRAW_MARGIN, height-DRAW_MARGIN),
     //    5, 5);
         
     //   ellipse(
-    //    scalePointCoordinate(userLocation.x, min, max, 0, width), 
-    //    scalePointCoordinate(-i-userLocation.y, min, max, DRAW_MARGIN, height-DRAW_MARGIN),
+    //    scalePointCoordinate(0, min, max, 0, width), 
+    //    scalePointCoordinate(-i, min, max, DRAW_MARGIN, height-DRAW_MARGIN),
     //    5, 5);
     //}
         
     
-    stroke(0);
+    stroke(255);
     //line(0, MARGIN2, width, MARGIN2);
     line(0, height-LINE_MARGIN, width, height-LINE_MARGIN);
   }
@@ -341,12 +339,12 @@ class ViewManager {
     this.activeScreen = MOVEMENT_POPUP;
     
     rect(100, 100, width-200, height-400, 6, 6, 6, 6);
-    fill(255,255,255);
+    fill(0,0,0);
     textAlign(CENTER,TOP);
     text("Take one step " + this.nextMove, width/2, height/4);
     
     rect(100+MARGIN, height/2-MARGIN2, width/2, MARGIN2, 6, 6, 6, 6);
-    fill(0,0,0);
+    fill(255,255,255);
     text("DONE",width/2,height/2-30);
   }
   
@@ -358,16 +356,16 @@ class ViewManager {
     synchronized(lock) {
       switch(nextMove) {
         case L:
-          this.locationEstimator.addUserMovement(-0.6f, 0f);
+          this.locationEstimator.addUserMovement(-1f, 0f);
           break;
         case U:
-          this.locationEstimator.addUserMovement(0f, 0.6f);
+          this.locationEstimator.addUserMovement(0f, 1f);
           break;
         case D:
-          this.locationEstimator.addUserMovement(0f, -0.6f);
+          this.locationEstimator.addUserMovement(0f, -1f);
           break;
         case R:
-          this.locationEstimator.addUserMovement(-0.6f, 0f);
+          this.locationEstimator.addUserMovement(1f, 0f);
           break;
       }
     }
